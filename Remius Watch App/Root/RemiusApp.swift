@@ -11,7 +11,7 @@ import SwiftUI
 struct RemiusWatchApp: App {
     var body: some Scene {
         WindowGroup {
-            FlightSearchAssembler.resolve()
+            FlightStatusAssemblerMock.resolve()
         }
     }
 }

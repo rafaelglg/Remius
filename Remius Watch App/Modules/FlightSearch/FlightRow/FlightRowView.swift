@@ -15,7 +15,6 @@ struct FlightRowView: View {
             Text(flight.flightNumber)
                 .font(.headline)
 
-            // Agrega más información del vuelo aquí
                 Text(flight.statusText)
                     .font(.caption)
                     .foregroundStyle(.secondary)

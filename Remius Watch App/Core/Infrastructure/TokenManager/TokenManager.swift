@@ -7,15 +7,15 @@
 
 actor TokenManager {
     private var currentToken: String?
-    
+
     func setToken(_ token: String) {
-        self.currentToken = token
+        currentToken = token
     }
-    
+
     func getToken() -> String? {
         currentToken
     }
-    
+
     func clearToken() {
         currentToken = nil
     }

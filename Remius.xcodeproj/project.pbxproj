@@ -37,6 +37,7 @@
 /* Begin PBXFileReference section */
 		EE0791D82F085C1300950FDD /* Remius.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Remius.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE0791DE2F085C1300950FDD /* Remius Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Remius Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE07942E2F0BFAD400950FDD /* Remius-Watch-App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Remius-Watch-App-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -61,6 +62,7 @@
 		EE0791D12F085C1200950FDD = {
 			isa = PBXGroup;
 			children = (
+				EE07942E2F0BFAD400950FDD /* Remius-Watch-App-Info.plist */,
 				EE0791E22F085C1300950FDD /* Remius Watch App */,
 				EE0791D92F085C1300950FDD /* Products */,
 			);
@@ -346,7 +348,9 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Remius-Watch-App-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Remius;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKWatchOnly = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -380,7 +384,9 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Remius-Watch-App-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Remius;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKWatchOnly = YES;
 				LD_RUNPATH_SEARCH_PATHS = (

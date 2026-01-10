@@ -5,18 +5,24 @@
 //  Created by rafael.loggiodice on 6/1/26.
 //
 
+import Foundation
 
-struct FlightStatusViewData: Identifiable {
+struct FlightStatusViewData: Identifiable, Hashable {
     let id = UUID()
     let flightNumber: String
     let statusText: String
-    let statusColorName: String // Para que la View no gestione lógica de colores
+    let statusColorName: String
 }
 
-// Mocks para tus vistas
 extension FlightStatusViewData {
-    static let mocks: [FlightStatusViewData] = [
-        FlightStatusViewData(flightNumber: "IB 6252", statusText: "On Time", statusColorName: "green"),
-        FlightStatusViewData(flightNumber: "AA 1234", statusText: "Delayed", statusColorName: "red")
-    ]
+    static var mock: FlightStatusViewData {
+        mocks[0]
+    }
+
+    static var mocks: [FlightStatusViewData] {
+        [
+            FlightStatusViewData(flightNumber: "IB 6252", statusText: "On Time", statusColorName: "green"),
+            FlightStatusViewData(flightNumber: "AA 1234", statusText: "Delayed", statusColorName: "red")
+        ]
+    }
 }
