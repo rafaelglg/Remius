@@ -8,14 +8,13 @@
 import SwiftUI
 
 struct ShimmerEffect: ViewModifier {
-    
     var firstColor: Color
     var secondColor: Color
     var thirdColor: Color
-    
+
     @State var startPoint: UnitPoint = .init(x: -1.8, y: -1.2)
     @State var endPoint: UnitPoint = .init(x: 0, y: -0.2)
-    
+
     func body(content: Content) -> some View {
         content
             .overlay {
@@ -31,7 +30,7 @@ struct ShimmerEffect: ViewModifier {
                 .onAppear {
                     withAnimation(
                         .easeInOut(duration: 1)
-                        .repeatForever(autoreverses: false)
+                            .repeatForever(autoreverses: false)
                     ) {
                         startPoint = .init(x: 1, y: 1)
                         endPoint = .init(x: 2.2, y: 2.2)
