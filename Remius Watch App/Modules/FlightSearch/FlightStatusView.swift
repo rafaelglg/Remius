@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  FlightSearchView.swift
 //  Remius Watch App
 //
 //  Created by rafael.loggiodice on 2/1/26.
@@ -7,7 +7,10 @@
 
 import SwiftUI
 
-struct ContentView: View {
+struct FlightSearchView: View {
+    
+    @State var presenter: FlightSearchPresenter
+    
     var body: some View {
         VStack {
             Image(systemName: "globe")
@@ -15,10 +18,11 @@ struct ContentView: View {
                 .foregroundStyle(.tint)
             Text("Hello, world!")
         }
+        .task(presenter.searchFlights)
         .padding()
     }
 }
 
 #Preview {
-    ContentView()
+    FlightSearchView(presenter: FlightSearchAssembler.makeFlightSearchPresenter())
 }

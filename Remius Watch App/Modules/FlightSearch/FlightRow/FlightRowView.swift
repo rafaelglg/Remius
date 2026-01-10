@@ -1,0 +1,31 @@
+//
+//  FlightRowView.swift
+//  Remius
+//
+//  Created by rafael.loggiodice on 10/1/26.
+//
+
+import SwiftUI
+
+struct FlightRowView: View {
+    let flight: FlightStatusViewData
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(flight.flightNumber)
+                .font(.headline)
+
+            // Agrega más información del vuelo aquí
+                Text(flight.statusText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+#Preview {
+    List {
+        FlightRowView(flight: .mock)
+    }
+}

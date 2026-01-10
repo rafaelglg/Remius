@@ -8,10 +8,10 @@
 import SwiftUI
 
 @main
-struct Remius_Watch_AppApp: App {
+struct RemiusWatchApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            FlightSearchAssembler.resolve()
         }
     }
 }
