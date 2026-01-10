@@ -33,14 +33,14 @@ struct DepartureArrival: Codable {
 }
 
 struct Timing: Codable {
-    let qualifier: String // "STD" para salida, "STA" para llegada
-    let value: String     // La fecha y hora en formato ISO8601
+    let qualifier: String
+    let value: String
 }
 
 struct FlightSegment: Codable {
     let boardPointIataCode: String
     let offPointIataCode: String
-    let scheduledSegmentDuration: String // Formato "PT16H45M"
+    let scheduledSegmentDuration: String
     let partnership: Partnership?
 }
 
@@ -48,7 +48,6 @@ struct Partnership: Codable {
     let operatingFlight: FlightDesignator?
 }
 
-// 6. LEGS (La parte física: de dónde a dónde vuela el avión realmente)
 struct FlightLeg: Codable {
     let boardPointIataCode: String
     let offPointIataCode: String
@@ -58,33 +57,4 @@ struct FlightLeg: Codable {
 
 struct AircraftEquipment: Codable {
     let aircraftType: String // Ej: "777"
-}
-
-extension DatedFlight {
-    static var mockList: [DatedFlight] {
-        return [
-            DatedFlight(
-                scheduledDepartureDate: "2026-01-15",
-                flightDesignator: FlightDesignator(carrierCode: "IB", flightNumber: 6252),
-                flightPoints: [
-                    FlightPoint(
-                        iataCode: "MAD",
-                        departure: DepartureArrival(timings: [Timing(qualifier: "STD", value: "2026-01-15T12:00:00")]),
-                        arrival: nil
-                    ),
-                    FlightPoint(
-                        iataCode: "JFK",
-                        departure: nil,
-                        arrival: DepartureArrival(timings: [Timing(qualifier: "STA", value: "2026-01-15T20:00:00")])
-                    )
-                ],
-                segments: [
-                    FlightSegment(boardPointIataCode: "MAD", offPointIataCode: "JFK", scheduledSegmentDuration: "PT8H", partnership: nil)
-                ],
-                legs: [
-                    FlightLeg(boardPointIataCode: "MAD", offPointIataCode: "JFK", aircraftEquipment: AircraftEquipment(aircraftType: "350"), scheduledLegDuration: "PT8H")
-                ]
-            )
-        ]
-    }
 }

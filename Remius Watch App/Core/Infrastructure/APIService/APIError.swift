@@ -15,7 +15,7 @@ enum APIError: Error {
     case unauthorized
     case networkError(Error)
     case serverError(statusCode: Int)
-    
+
     var localizedDescription: String {
         switch self {
         case .invalidURL:
@@ -26,9 +26,9 @@ enum APIError: Error {
             return "Failed to decode response"
         case .unauthorized:
             return "Unauthorized - Invalid token"
-        case .networkError(let error):
+        case let .networkError(error):
             return "Network error: \(error.localizedDescription)"
-        case .serverError(let statusCode):
+        case let .serverError(statusCode):
             return "Server error: \(statusCode)"
         }
     }
