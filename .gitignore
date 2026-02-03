@@ -5,6 +5,7 @@
 
 # Secrets
 Secrets.xcconfig
+Config/*.xcconfig
 *.xcconfig
 
 ### Swift ###
