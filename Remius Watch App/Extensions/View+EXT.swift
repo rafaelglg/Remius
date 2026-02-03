@@ -9,11 +9,11 @@ import SwiftUI
 
 extension UIColor {
     static var mySystemGray5: UIColor {
-        return .init(red: 229 / 255, green: 229 / 255, blue: 234 / 255, alpha: 1)
+        return .init(red: 55 / 255, green: 55 / 255, blue: 60 / 255, alpha: 1)
     }
 
     static var mySystemGray6: UIColor {
-        return .init(red: 242 / 255, green: 242 / 255, blue: 247 / 255, alpha: 1)
+        return .init(red: 95 / 255, green: 95 / 255, blue: 100 / 255, alpha: 1)
     }
 }
 

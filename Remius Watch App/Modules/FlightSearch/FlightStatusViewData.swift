@@ -22,6 +22,9 @@ extension FlightStatusViewData {
     static var mocks: [FlightStatusViewData] {
         [
             FlightStatusViewData(flightNumber: "IB 6252", statusText: "On Time", statusColorName: "green"),
+            FlightStatusViewData(flightNumber: "AA 1234", statusText: "Delayed", statusColorName: "red"),
+            FlightStatusViewData(flightNumber: "AA 1234", statusText: "Delayed", statusColorName: "red"),
+            FlightStatusViewData(flightNumber: "AA 1234", statusText: "Delayed", statusColorName: "red"),
             FlightStatusViewData(flightNumber: "AA 1234", statusText: "Delayed", statusColorName: "red")
         ]
     }

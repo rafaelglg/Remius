@@ -9,16 +9,19 @@ import Foundation
 
 protocol FlightStatusPresenter: Sendable {
     var loadState: LoadState<[FlightStatusViewData]> { get }
+    var presentAddFlightSheet: Bool { get set }
+
     func searchFlights() async
+    func onAddFlightAction()
 }
 
 @Observable
 @MainActor
 final class FlightStatusPresenterMock: FlightStatusPresenter {
-
     var loadState: LoadState<[FlightStatusViewData]>
     var delay: Double = 0.0
     var shouldCallSearch: Bool
+    var presentAddFlightSheet: Bool = false
 
     init(
         loadState: LoadState<[FlightStatusViewData]> = .initial,
@@ -32,8 +35,13 @@ final class FlightStatusPresenterMock: FlightStatusPresenter {
 
     func searchFlights() async {
         guard shouldCallSearch else { return }
+        try? await Task.sleep(for: .seconds(delay))
 
         loadState = .success(FlightStatusViewData.mocks)
+    }
+
+    func onAddFlightAction() {
+        presentAddFlightSheet.toggle()
     }
 }
 
@@ -44,6 +52,7 @@ final class FlightStatusPresenterImpl: FlightStatusPresenter {
     let router: FlightStatusRouter
 
     private(set) var loadState: LoadState<[FlightStatusViewData]> = .initial
+    var presentAddFlightSheet: Bool = false
 
     init(interactor: FlightStatusInteractor,
          router: FlightStatusRouter) {
@@ -53,7 +62,7 @@ final class FlightStatusPresenterImpl: FlightStatusPresenter {
 
     func searchFlights() async {
         do {
-            let flightStatus: [DatedFlight] = try await interactor.fetchFlightStatus(for: "BA249", date: "2026-01-15")
+            let flightStatus: [DatedFlight] = try await interactor.fetchFlightStatus(for: "BA249", date: "2026-04-15")
 
             let viewDataList = flightStatus.map { $0.toViewData() }
             loadState = .success(viewDataList)
@@ -66,6 +75,10 @@ final class FlightStatusPresenterImpl: FlightStatusPresenter {
 
     func didSelectFlight(_ flight: DatedFlight) {
         router.navigateToFlightDetails(flight: flight)
+    }
+
+    func onAddFlightAction() {
+        presentAddFlightSheet.toggle()
     }
 }
 

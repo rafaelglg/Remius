@@ -12,8 +12,8 @@ struct ShimmerEffect: ViewModifier {
     var secondColor: Color
     var thirdColor: Color
 
-    @State var startPoint: UnitPoint = .init(x: -1.8, y: -1.2)
-    @State var endPoint: UnitPoint = .init(x: 0, y: -0.2)
+    @State var startPoint: UnitPoint = .init(x: -2.5, y: -2.5)
+    @State var endPoint: UnitPoint = .init(x: -0.5, y: -0.5)
 
     func body(content: Content) -> some View {
         content
@@ -32,8 +32,8 @@ struct ShimmerEffect: ViewModifier {
                         .easeInOut(duration: 1)
                             .repeatForever(autoreverses: false)
                     ) {
-                        startPoint = .init(x: 1, y: 1)
-                        endPoint = .init(x: 2.2, y: 2.2)
+                        startPoint = .init(x: 1.5, y: 1.5)
+                        endPoint = .init(x: 3.5, y: 3.5)
                     }
                 }
             }
@@ -42,12 +42,12 @@ struct ShimmerEffect: ViewModifier {
 
 #Preview("Default color gray") {
     Rectangle()
-        .frame(width: 240, height: 280)
+        .fill(Color.gray)
         .shimmerEffect()
         .clipShape(.rect(cornerRadius: 15))
 }
 
-#Preview("Diffrent color") {
+#Preview("Different color") {
     RoundedRectangle(cornerRadius: 10)
         .frame(width: 240, height: 280)
         .shimmerEffect(firstColor: .yellow, secondColor: .red, thirdColor: .yellow)

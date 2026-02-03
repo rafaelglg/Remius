@@ -16,26 +16,57 @@ struct FlightStatusView: View {
             List {
                 switch presenter.loadState {
                 case .initial, .loading:
-                    ProgressView()
+                    placeholderView
                 case .success(let flights):
                     successView(flights)
                 case .failure(let error):
                     errorView(error: error)
                 }
             }
-            .listStyle(.automatic)
+            .listStyle(.carousel)
             .focusable()
             .focused($isFocused)
             .navigationTitle("Flights")
             .navigationDestination(for: FlightStatusViewData.self) { flight in
                 Text(flight.statusColorName)
             }
+            .sheet(isPresented: $presenter.presentAddFlightSheet) {
+                Text("hola")
+            }
+            .toolbar {
+                addFlightToolbarButton
+            }
         }
-        .onAppear { isFocused = true }
+        .onAppear(perform: setInitialFocus)
         .task(presenter.searchFlights)
     }
 
-    func successView(_ flights: [FlightStatusViewData]) -> some View {
+    @ToolbarContentBuilder
+    private var addFlightToolbarButton: some ToolbarContent {
+        if case .success = presenter.loadState {
+            ToolbarItem(placement: .bottomBar) {
+                addFlightButton
+            }
+        }
+    }
+
+    private var addFlightButton: some View {
+        HStack {
+            Spacer()
+            Button(action: presenter.onAddFlightAction) {
+                Label("Add Flight", systemImage: "plus.circle.fill")
+            }
+        }
+    }
+
+    private var placeholderView: some View {
+        ForEach(0..<12) {_ in
+            FlightRowViewPlaceholder()
+        }
+    }
+
+    @ViewBuilder
+    private func successView(_ flights: [FlightStatusViewData]) -> some View {
         ForEach(flights) { flight in
             NavigationLink(value: flight) {
                 FlightRowView(flight: flight)
@@ -43,7 +74,7 @@ struct FlightStatusView: View {
         }
     }
 
-    func errorView(error: Error) -> some View {
+    private func errorView(error: Error) -> some View {
         VStack {
             ContentUnavailableView(
                 "Could not load flight",
@@ -63,14 +94,22 @@ struct FlightStatusView: View {
         }
         .removeListRowFormatting()
     }
+
+    func setInitialFocus() {
+        isFocused = true
+    }
 }
 
 #Preview("Success State") {
-    FlightStatusView(presenter: FlightStatusPresenterMock())
+    FlightStatusView(
+        presenter: FlightStatusPresenterMock(delay: 2)
+    )
 }
 
 #Preview("Loading State") {
-    FlightStatusView(presenter: FlightStatusPresenterMock(shouldCallSearch: false))
+    FlightStatusView(
+        presenter: FlightStatusPresenterMock(shouldCallSearch: false)
+    )
 }
 
 #Preview("Failure State") {
