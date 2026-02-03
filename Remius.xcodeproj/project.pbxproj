@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		EE0791DF2F085C1300950FDD /* Remius Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = EE0791DE2F085C1300950FDD /* Remius Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		EE4397282F32325B006575B0 /* Secrets.xcconfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE4397262F32325B006575B0 /* Secrets.xcconfig.swift */; };
+		EE4397282F32325B006575B0 /* Secrets.xcconfig.txt in Sources */ = {isa = PBXBuildFile; fileRef = EE4397262F32325B006575B0 /* Secrets.xcconfig.txt */; };
 		EE4397292F32325B006575B0 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = EE4397252F32325B006575B0 /* Secrets.xcconfig */; };
 /* End PBXBuildFile section */
 
@@ -41,7 +41,7 @@
 		EE0791DE2F085C1300950FDD /* Remius Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Remius Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE07942E2F0BFAD400950FDD /* Remius-Watch-App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Remius-Watch-App-Info.plist"; sourceTree = "<group>"; };
 		EE4397252F32325B006575B0 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
-		EE4397262F32325B006575B0 /* Secrets.xcconfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.xcconfig.swift; sourceTree = "<group>"; };
+		EE4397262F32325B006575B0 /* Secrets.xcconfig.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Secrets.xcconfig.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -86,7 +86,7 @@
 			isa = PBXGroup;
 			children = (
 				EE4397252F32325B006575B0 /* Secrets.xcconfig */,
-				EE4397262F32325B006575B0 /* Secrets.xcconfig.swift */,
+				EE4397262F32325B006575B0 /* Secrets.xcconfig.txt */,
 			);
 			path = Config;
 			sourceTree = "<group>";
@@ -220,7 +220,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EE4397282F32325B006575B0 /* Secrets.xcconfig.swift in Sources */,
+				EE4397282F32325B006575B0 /* Secrets.xcconfig.txt in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
