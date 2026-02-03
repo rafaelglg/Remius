@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		EE0791DF2F085C1300950FDD /* Remius Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = EE0791DE2F085C1300950FDD /* Remius Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		EE4397282F32325B006575B0 /* Secrets.xcconfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE4397262F32325B006575B0 /* Secrets.xcconfig.swift */; };
+		EE4397292F32325B006575B0 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = EE4397252F32325B006575B0 /* Secrets.xcconfig */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,6 +40,8 @@
 		EE0791D82F085C1300950FDD /* Remius.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Remius.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE0791DE2F085C1300950FDD /* Remius Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Remius Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE07942E2F0BFAD400950FDD /* Remius-Watch-App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Remius-Watch-App-Info.plist"; sourceTree = "<group>"; };
+		EE4397252F32325B006575B0 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		EE4397262F32325B006575B0 /* Secrets.xcconfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.xcconfig.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -65,6 +69,7 @@
 				EE07942E2F0BFAD400950FDD /* Remius-Watch-App-Info.plist */,
 				EE0791E22F085C1300950FDD /* Remius Watch App */,
 				EE0791D92F085C1300950FDD /* Products */,
+				EE4397272F32325B006575B0 /* Config */,
 			);
 			sourceTree = "<group>";
 		};
@@ -75,6 +80,15 @@
 				EE0791DE2F085C1300950FDD /* Remius Watch App.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		EE4397272F32325B006575B0 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				EE4397252F32325B006575B0 /* Secrets.xcconfig */,
+				EE4397262F32325B006575B0 /* Secrets.xcconfig.swift */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -172,6 +186,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EE4397292F32325B006575B0 /* Secrets.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -205,6 +220,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EE4397282F32325B006575B0 /* Secrets.xcconfig.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -339,6 +355,7 @@
 		};
 		EE0791EC2F085C1400950FDD /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = EE4397252F32325B006575B0 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -375,6 +392,7 @@
 		};
 		EE0791ED2F085C1400950FDD /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = EE4397252F32325B006575B0 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -412,6 +430,7 @@
 		};
 		EE0791F02F085C1400950FDD /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = EE4397252F32325B006575B0 /* Secrets.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -431,6 +450,7 @@
 		};
 		EE0791F12F085C1400950FDD /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = EE4397252F32325B006575B0 /* Secrets.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
