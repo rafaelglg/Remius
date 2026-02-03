@@ -3,6 +3,10 @@
 
 ### APP ###
 
+# Secrets
+Secrets.xcconfig
+*.xcconfig
+
 ### Swift ###
 # Xcode
 #
