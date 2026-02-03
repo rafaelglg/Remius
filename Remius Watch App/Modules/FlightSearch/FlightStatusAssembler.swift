@@ -11,13 +11,14 @@ protocol FlightStatusAssembler {
     static func resolve() -> FlightStatusView
 }
 
-enum FlightStatusAssemblerImpl {
+struct FlightStatusAssemblerImpl {
     static func makeFlightStatusApiService() -> APIService {
-        APIServiceImpl(
+        let amadeusConfig: AmadeusConfig = AmadeusConfig()
+
+        return APIServiceImpl(
             session: .shared,
             tokenManager: TokenManager(),
-            clientId: "d7N5i4zx3F7P8W7BA7bL21e1TjpiZ9c6",
-            clientSecret: "8zJrgvfqZZmZUfMD"
+            config: amadeusConfig
         )
     }
 

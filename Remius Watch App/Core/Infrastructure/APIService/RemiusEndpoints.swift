@@ -29,7 +29,7 @@ enum RemiusEndpoints: Equatable {
     /// The URL scheme used by the API (e.g., "https").
     var scheme: String { "https" }
 
-    /// The host of the Rick and Morty API.
+    /// The host endpoint of the API.
     var host: String { "test.api.amadeus.com" }
 
     /// Content-Type header for the endpoint

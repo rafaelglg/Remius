@@ -19,12 +19,11 @@ struct APIServiceImpl: APIService {
 
     init(session: URLSession,
          tokenManager: TokenManager,
-         clientId: String,
-         clientSecret: String) {
+         config: AmadeusConfig) {
         self.session = session
         self.tokenManager = tokenManager
-        self.clientId = clientId
-        self.clientSecret = clientSecret
+        self.clientId = config.clientId
+        self.clientSecret = config.clientSecret
     }
 
     private func getValidAccessToken() async throws -> String {

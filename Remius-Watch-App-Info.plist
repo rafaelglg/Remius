@@ -2,5 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>AmadeusClientSecret</key>
+	<string>$(AMADEUS_CLIENT_SECRET)</string>
+	<key>AmadeusClientID</key>
+	<string>$(AMADEUS_CLIENT_ID)</string>
 </dict>
 </plist>
