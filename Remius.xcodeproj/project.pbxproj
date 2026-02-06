@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		EE0791DF2F085C1300950FDD /* Remius Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = EE0791DE2F085C1300950FDD /* Remius Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		EE4397282F32325B006575B0 /* Secrets.xcconfig.txt in Sources */ = {isa = PBXBuildFile; fileRef = EE4397262F32325B006575B0 /* Secrets.xcconfig.txt */; };
 		EE4397292F32325B006575B0 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = EE4397252F32325B006575B0 /* Secrets.xcconfig */; };
 /* End PBXBuildFile section */
 
@@ -220,7 +219,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EE4397282F32325B006575B0 /* Secrets.xcconfig.txt in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
