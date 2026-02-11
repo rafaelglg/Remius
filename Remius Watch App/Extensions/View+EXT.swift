@@ -7,17 +7,15 @@
 
 import SwiftUI
 
-extension UIColor {
-    static var mySystemGray5: UIColor {
-        return .init(red: 55 / 255, green: 55 / 255, blue: 60 / 255, alpha: 1)
-    }
-
-    static var mySystemGray6: UIColor {
-        return .init(red: 95 / 255, green: 95 / 255, blue: 100 / 255, alpha: 1)
-    }
-}
-
 extension View {
+
+    /// Sets both width and height to the same size value
+    /// - Parameter size: The size to apply to both width and height
+    /// - Returns: A view with the specified width and height
+    func frame(size: CGFloat) -> some View {
+        self.frame(width: size, height: size)
+    }
+
     func shimmerEffect(
         firstColor: Color = Color(uiColor: UIColor.mySystemGray5),
         secondColor: Color = Color(uiColor: UIColor.mySystemGray6),
@@ -30,6 +28,15 @@ extension View {
                 thirdColor: thirdColor
             )
         )
+    }
+
+    func callToActionButton(backgroundColor: Color? = nil, role: ButtonRole? = nil) -> some View {
+        self
+            .font(.headline)
+            .foregroundStyle(role == .destructive ? .red : .white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 55)
+            .background(backgroundColor ?? .red, in: RoundedRectangle(cornerRadius: 16))
     }
 
     func removeListRowFormatting() -> AnyView {

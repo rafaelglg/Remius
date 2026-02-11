@@ -10,9 +10,11 @@ import Foundation
 protocol FlightStatusPresenter: Sendable {
     var loadState: LoadState<[FlightStatusViewData]> { get }
     var presentAddFlightSheet: Bool { get set }
+    var flightCount: Int { get }
 
     func searchFlights() async
     func onAddFlightAction()
+    func navigateToFlightDetails(for flight: FlightStatusViewData) -> FlightDetailView
 }
 
 @Observable
@@ -22,6 +24,15 @@ final class FlightStatusPresenterMock: FlightStatusPresenter {
     var delay: Double = 0.0
     var shouldCallSearch: Bool
     var presentAddFlightSheet: Bool = false
+
+    var flightCount: Int {
+        switch loadState {
+        case .success(let flights):
+            return flights.count
+        case .initial, .loading, .failure:
+            return .zero
+        }
+    }
 
     init(
         loadState: LoadState<[FlightStatusViewData]> = .initial,
@@ -35,13 +46,19 @@ final class FlightStatusPresenterMock: FlightStatusPresenter {
 
     func searchFlights() async {
         guard shouldCallSearch else { return }
-        try? await Task.sleep(for: .seconds(delay))
 
-        loadState = .success(FlightStatusViewData.mocks)
+        if case .initial = loadState {
+            try? await Task.sleep(for: .seconds(delay))
+            loadState = .success(FlightStatusViewData.mocks)
+        }
     }
 
     func onAddFlightAction() {
         presentAddFlightSheet.toggle()
+    }
+
+    func navigateToFlightDetails(for flight: FlightStatusViewData) -> FlightDetailView {
+        FlightDetailView(flight: flight)
     }
 }
 
@@ -54,6 +71,15 @@ final class FlightStatusPresenterImpl: FlightStatusPresenter {
     private(set) var loadState: LoadState<[FlightStatusViewData]> = .initial
     var presentAddFlightSheet: Bool = false
 
+    var flightCount: Int {
+        switch loadState {
+        case .success(let flights):
+            return flights.count
+        case .initial, .loading, .failure:
+            return .zero
+        }
+    }
+
     init(interactor: FlightStatusInteractor,
          router: FlightStatusRouter) {
         self.interactor = interactor
@@ -62,34 +88,20 @@ final class FlightStatusPresenterImpl: FlightStatusPresenter {
 
     func searchFlights() async {
         do {
-            let flightStatus: [DatedFlight] = try await interactor.fetchFlightStatus(for: "BA249", date: "2026-04-15")
-
+            let flightStatus: [DatedFlight] = try await interactor.fetchFlightStatus(for: "AF1259", date: "2026-02-07")
             let viewDataList = flightStatus.map { $0.toViewData() }
             loadState = .success(viewDataList)
-            print(viewDataList)
         } catch {
-            loadState = .failure(error)
-            print(error)
+            let uiError = FlightErrorMapper.map(error: error)
+            loadState = .failure(uiError)
         }
     }
 
-    func didSelectFlight(_ flight: DatedFlight) {
+    func navigateToFlightDetails(for flight: FlightStatusViewData) -> FlightDetailView {
         router.navigateToFlightDetails(flight: flight)
     }
 
     func onAddFlightAction() {
         presentAddFlightSheet.toggle()
-    }
-}
-
-private extension DatedFlight {
-    func toViewData() -> FlightStatusViewData {
-        let isDelayed = true
-
-        return FlightStatusViewData(
-            flightNumber: "\(flightDesignator.carrierCode)\(flightDesignator.flightNumber)",
-            statusText: isDelayed ? "Delayed" : "On Time",
-            statusColorName: isDelayed ? "red" : "green"
-        )
     }
 }

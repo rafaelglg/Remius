@@ -11,7 +11,7 @@ struct FlightRowView: View {
     let flight: FlightStatusViewData
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: .xxSmall) {
             Text(flight.flightNumber)
                 .font(.headline)
 
@@ -19,7 +19,7 @@ struct FlightRowView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, .xxSmall)
     }
 }
 
