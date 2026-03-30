@@ -86,8 +86,11 @@ struct FlightStatusView: View {
     private func errorView(error: Error) -> some View {
         ScrollView {
             if let uiError = error as? UIError {
-                ErrorRetryView(title: uiError.title) {
-                    try? await Task.sleep(for: .seconds(3))
+                ErrorRetryView(
+                    title: uiError.title,
+                    subtitle: uiError.subtitle
+                ) {
+                    await presenter.searchFlights()
                 }
             }
         }

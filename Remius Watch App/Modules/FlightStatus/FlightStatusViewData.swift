@@ -14,45 +14,105 @@ struct FlightStatusViewData: Identifiable, Hashable {
     let operatingFlightNumber: String?
     let route: String
     let departureTime: String
-    let departureDate: String
     let arrivalTime: String
-    let arrivalDate: String
-    let departureTimezone: String
-    let arrivalTimezone: String
     let status: FlightStatus
     let stops: Int
     let stopCity: String?
     let gate: String?
+    let terminal: String?
     let aircraftType: String?
     let duration: String
     let legs: [FlightLegViewData]
+    let departureDelayMinutes: Int
+    let arrivalDelayMinutes: Int
+    let progressPercent: Int
+    let cruisingSpeed: String?
+    let cruisingAltitude: String?
+    let baggageClaim: String?
+    let originCode: String
+    let originCity: String?
+    let destinationCode: String
+    let destinationCity: String?
 
-    var statusColor: Color {
-        status.color
+    // MARK: - Computed Properties
+
+    var statusText: LocalizedStringResource {
+        status.localizedText
+    }
+
+    var routeInfo: RouteInfo {
+        RouteInfo(
+            departureTime: departureTime,
+            arrivalTime: arrivalTime,
+            originCity: originCity,
+            originCode: originCode,
+            destinationCity: destinationCity,
+            destinationCode: destinationCode
+        )
     }
 
     var isDirectFlight: Bool {
         stops == .zero
     }
 
-    var statusText: LocalizedStringResource {
-        status.localizedText
-    }
-
     var hasCodeshare: Bool {
         operatingFlightNumber != nil && operatingFlightNumber != flightNumber
     }
 
-    var arrivesNextDay: Bool {
-        departureDate != arrivalDate
+    // MARK: Delay
+
+    var hasDelays: Bool {
+        departureDelayMinutes != .zero || arrivalDelayMinutes != .zero
     }
 
-    var stopsCount: String {
-        "\(stops)"
+    var isEarly: Bool {
+        departureDelayMinutes < .zero
     }
+
+    var delayText: String? {
+        guard departureDelayMinutes != .zero else { return nil }
+        let prefix = departureDelayMinutes < .zero ? "-" : "+"
+        return "\(prefix)\(abs(departureDelayMinutes))m"
+    }
+
+    var arrivalDelayText: String? {
+        guard arrivalDelayMinutes != .zero else { return nil }
+        let prefix = arrivalDelayMinutes < .zero ? "-" : "+"
+        return "\(prefix)\(abs(arrivalDelayMinutes))m"
+    }
+
+    // MARK: Progress
+
+    var isInProgress: Bool {
+        progressPercent > .zero && progressPercent < 100
+    }
+
+    var progressValue: Double {
+        Double(progressPercent) / 100.0
+    }
+
+    // MARK: Airport
+
+    var gateInfo: String? {
+        guard let gate else { return nil }
+        if let terminal {
+            return "T\(terminal) • Gate \(gate)"
+        }
+        return "Gate \(gate)"
+    }
+
+    // MARK: Stops
+
+    var stopsCountLocalized: LocalizedStringResource {
+        stops == 1
+            ? "flight.detail.oneStop"
+            : "flight.detail.multipleStops \(stops)"
+    }
+
+    // MARK: - Static Helpers
 
     static func navigationTitle(count: Int) -> String {
-        guard count > 0 else { return "" }
+        guard count > .zero else { return "" }
         return String(localized: "\(count) flight.status.navigation.title")
     }
 
@@ -69,138 +129,7 @@ struct FlightLegViewData: Identifiable, Hashable {
     let aircraftType: String?
 }
 
-// MARK: - Mapping
-// TODO: Refactor when migrating to new API
-extension DatedFlight {
-    func toViewData() -> FlightStatusViewData {
-        let origin = flightPoints.first?.iataCode ?? "???"
-        let destination = flightPoints.last?.iataCode ?? "???"
-
-        let departureTimeValue = flightPoints.first?.departure?.timings
-            .first(where: { $0.qualifier == "STD" })?.value ?? ""
-        let arrivalTimeValue = flightPoints.last?.arrival?.timings
-            .first(where: { $0.qualifier == "STA" })?.value ?? ""
-
-        // Parse dates and timezones
-        let (depTime, depDate, depTZ) = parseDateTime(departureTimeValue)
-        let (arrTime, arrDate, arrTZ) = parseDateTime(arrivalTimeValue)
-
-        // Calculate stops
-        let numberOfStops = max(0, legs.count - 1)
-        let stopCity = numberOfStops > 0 ? legs.first?.offPointIataCode : nil
-
-        // Operating airline (codeshare)
-        let operatingFlight = segments.first?.partnership?.operatingFlight
-        let operatingFlightNumber = operatingFlight.map {
-            "\($0.carrierCode) \($0.flightNumber)"
-        }
-
-        // Build legs data
-        let legsData = legs.enumerated().map { index, leg in
-            let aircraftCode = leg.aircraftEquipment?.aircraftType
-            let aircraft = aircraftCode.map { AircraftType(iataCode: $0).displayName }
-
-            return FlightLegViewData(
-                id: "\(leg.boardPointIataCode)-\(leg.offPointIataCode)-\(index)",
-                origin: leg.boardPointIataCode,
-                destination: leg.offPointIataCode,
-                duration: formatDuration(leg.scheduledLegDuration),
-                aircraftType: aircraft
-            )
-        }
-
-        let aircraftType: String? = {
-            guard let code = legs.first?.aircraftEquipment?.aircraftType else { return nil }
-            return AircraftType(iataCode: code).displayName
-        }()
-
-        let duration = formatDuration(segments.first?.scheduledSegmentDuration ?? "")
-        let status = determineStatus()
-
-        return FlightStatusViewData(
-            id: "\(flightDesignator.carrierCode)\(flightDesignator.flightNumber)-\(scheduledDepartureDate)",
-            flightNumber: "\(flightDesignator.carrierCode) \(flightDesignator.flightNumber)",
-            operatingFlightNumber: operatingFlightNumber,
-            route: "\(origin) → \(destination)",
-            departureTime: depTime,
-            departureDate: depDate,
-            arrivalTime: arrTime,
-            arrivalDate: arrDate,
-            departureTimezone: depTZ,
-            arrivalTimezone: arrTZ,
-            status: status,
-            stops: numberOfStops,
-            stopCity: stopCity,
-            gate: nil,
-            aircraftType: aircraftType,
-            duration: duration,
-            legs: legsData
-        )
-    }
-
-    // MARK: - Private Helpers
-
-    private func determineStatus() -> FlightStatus {
-        guard let departure = flightPoints.first?.departure else {
-            return .pending
-        }
-
-        let scheduledTime = departure.timings.first(where: { $0.qualifier == "STD" })
-        let estimatedTime = departure.timings.first(where: { $0.qualifier == "ETD" })
-
-        if let estimated = estimatedTime?.value, let scheduled = scheduledTime?.value {
-            return estimated != scheduled ? .delayed : .onTime
-        }
-
-        return .onTime
-    }
-
-    private func parseDateTime(_ isoString: String) -> (time: String, date: String, timezone: String) {
-        // "2026-04-15T21:55+01:00"
-        let components = isoString.split(separator: "T")
-        guard components.count == 2 else {
-            return ("--:--", "", "")
-        }
-
-        let datePart = String(components[0])
-        let timePart = String(components[1])
-
-        // Extract time (21:55)
-        let time = String(timePart.prefix(5))
-
-        // Extract timezone (+01:00)
-        let tzStart = timePart.firstIndex(where: { $0 == "+" || $0 == "-" }) ?? timePart.endIndex
-        let timezone = String(timePart[tzStart...])
-
-        // Format date (Apr 15)
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        if let date = dateFormatter.date(from: datePart) {
-            dateFormatter.dateFormat = "MMM d"
-            return (time, dateFormatter.string(from: date), timezone)
-        }
-
-        return (time, datePart, timezone)
-    }
-
-    private func formatTime(_ isoTime: String) -> String {
-        let components = isoTime.split(separator: "T")
-        guard components.count > 1 else { return isoTime }
-        return String(components[1].prefix(5))
-    }
-
-    private func formatDuration(_ duration: String) -> String {
-        let cleaned = duration.replacingOccurrences(of: "PT", with: "")
-        let components = cleaned.components(separatedBy: "H")
-
-        guard components.count == 2 else { return duration }
-
-        let hours = components[0]
-        let minutes = components[1].replacingOccurrences(of: "M", with: "")
-
-        return "\(hours)h \(minutes)m"
-    }
-}
+// MARK: - Mocks
 
 extension FlightStatusViewData {
     static var mock: FlightStatusViewData {
@@ -214,77 +143,100 @@ extension FlightStatusViewData {
             operatingFlightNumber: nil,
             route: "",
             departureTime: "",
-            departureDate: "",
             arrivalTime: "",
-            arrivalDate: "",
-            departureTimezone: "",
-            arrivalTimezone: "",
-            status: .cancelled,
+            status: .pending,
             stops: 0,
             stopCity: nil,
             gate: nil,
+            terminal: nil,
             aircraftType: nil,
             duration: "",
-            legs: []
+            legs: [],
+            departureDelayMinutes: 0,
+            arrivalDelayMinutes: 0,
+            progressPercent: 0,
+            cruisingSpeed: nil,
+            cruisingAltitude: nil,
+            baggageClaim: nil,
+            originCode: "",
+            originCity: nil,
+            destinationCode: "",
+            destinationCity: nil
         )
     }
 
     static var mocks: [FlightStatusViewData] {
         [
+            // 0 — Vuelo directo, a tiempo
             FlightStatusViewData(
                 id: "BA249-2026-04-15",
                 flightNumber: "BA 249",
                 operatingFlightNumber: nil,
-                route: "LHR → JFK",
+                route: "London → New York",
                 departureTime: "14:30",
-                departureDate: "Apr 15",
                 arrivalTime: "18:45",
-                arrivalDate: "Apr 15",
-                departureTimezone: "+00:00",
-                arrivalTimezone: "-05:00",
                 status: .onTime,
                 stops: 0,
                 stopCity: nil,
                 gate: "B23",
-                aircraftType: "777",
+                terminal: "5",
+                aircraftType: "Boeing 777-200",
                 duration: "7h 15m",
-                legs: []
+                legs: [],
+                departureDelayMinutes: 0,
+                arrivalDelayMinutes: 0,
+                progressPercent: 0,
+                cruisingSpeed: "907 km/h",
+                cruisingAltitude: "10668 m",
+                baggageClaim: nil,
+                originCode: "LHR",
+                originCity: "London",
+                destinationCode: "JFK",
+                destinationCity: "New York"
             ),
+
+            // 1 — Vuelo directo, retrasado
             FlightStatusViewData(
                 id: "IB6252-2026-04-15",
                 flightNumber: "IB 6252",
                 operatingFlightNumber: nil,
-                route: "MAD → BCN",
+                route: "Madrid → Barcelona",
                 departureTime: "09:15",
-                departureDate: "Apr 15",
                 arrivalTime: "10:30",
-                arrivalDate: "Apr 15",
-                departureTimezone: "+01:00",
-                arrivalTimezone: "+01:00",
                 status: .delayed,
                 stops: 0,
                 stopCity: nil,
                 gate: "A12",
-                aircraftType: "320",
+                terminal: "4",
+                aircraftType: "Airbus A320",
                 duration: "1h 15m",
-                legs: []
+                legs: [],
+                departureDelayMinutes: 15,
+                arrivalDelayMinutes: 12,
+                progressPercent: 0,
+                cruisingSpeed: nil,
+                cruisingAltitude: nil,
+                baggageClaim: nil,
+                originCode: "MAD",
+                originCity: "Madrid",
+                destinationCode: "BCN",
+                destinationCity: "Barcelona"
             ),
+
+            // 2 — Con escala + codeshare, embarcando
             FlightStatusViewData(
                 id: "AA1234-2026-04-15",
                 flightNumber: "AA 1234",
                 operatingFlightNumber: "BA 4567",
-                route: "LAX → MIA",
+                route: "Los Angeles → Miami",
                 departureTime: "11:00",
-                departureDate: "Apr 15",
                 arrivalTime: "19:20",
-                arrivalDate: "Apr 15",
-                departureTimezone: "-08:00",
-                arrivalTimezone: "-05:00",
                 status: .boarding,
                 stops: 1,
                 stopCity: "DFW",
                 gate: "C45",
-                aircraftType: "787",
+                terminal: "8",
+                aircraftType: "Boeing 787-8",
                 duration: "5h 20m",
                 legs: [
                     FlightLegViewData(
@@ -292,16 +244,138 @@ extension FlightStatusViewData {
                         origin: "LAX",
                         destination: "DFW",
                         duration: "2h 45m",
-                        aircraftType: "737"
+                        aircraftType: "Boeing 737-800"
                     ),
                     FlightLegViewData(
                         id: "DFW-MIA-1",
                         origin: "DFW",
                         destination: "MIA",
                         duration: "2h 35m",
-                        aircraftType: "787"
+                        aircraftType: "Boeing 787-8"
                     )
-                ]
+                ],
+                departureDelayMinutes: 0,
+                arrivalDelayMinutes: 0,
+                progressPercent: 0,
+                cruisingSpeed: nil,
+                cruisingAltitude: nil,
+                baggageClaim: nil,
+                originCode: "LAX",
+                originCity: "Los Angeles",
+                destinationCode: "MIA",
+                destinationCity: "Miami"
+            ),
+
+            // 3 — En vuelo, salió antes de hora
+            FlightStatusViewData(
+                id: "AF1259-2026-02-20",
+                flightNumber: "AF 1259",
+                operatingFlightNumber: nil,
+                route: "Rabat → Paris",
+                departureTime: "14:10",
+                arrivalTime: "17:10",
+                status: .departed,
+                stops: 0,
+                stopCity: nil,
+                gate: "K12",
+                terminal: "2E",
+                aircraftType: "Airbus A320",
+                duration: "2h",
+                legs: [],
+                departureDelayMinutes: -5,
+                arrivalDelayMinutes: 0,
+                progressPercent: 45,
+                cruisingSpeed: "833 km/h",
+                cruisingAltitude: "10058 m",
+                baggageClaim: nil,
+                originCode: "RBA",
+                originCity: "Rabat",
+                destinationCode: "CDG",
+                destinationCity: "Paris"
+            ),
+
+            // 4 — Cancelado
+            FlightStatusViewData(
+                id: "LH890-2026-04-20",
+                flightNumber: "LH 890",
+                operatingFlightNumber: nil,
+                route: "Frankfurt → São Paulo",
+                departureTime: "22:00",
+                arrivalTime: "06:30",
+                status: .cancelled,
+                stops: 0,
+                stopCity: nil,
+                gate: nil,
+                terminal: "1",
+                aircraftType: "Airbus A340-300",
+                duration: "11h 30m",
+                legs: [],
+                departureDelayMinutes: 0,
+                arrivalDelayMinutes: 0,
+                progressPercent: 0,
+                cruisingSpeed: nil,
+                cruisingAltitude: nil,
+                baggageClaim: nil,
+                originCode: "FRA",
+                originCity: "Frankfurt",
+                destinationCode: "GRU",
+                destinationCity: "São Paulo"
+            ),
+
+            // 5 — Pendiente/programado (sin gate aún)
+            FlightStatusViewData(
+                id: "EK241-2026-05-10",
+                flightNumber: "EK 241",
+                operatingFlightNumber: nil,
+                route: "Dubai → New York",
+                departureTime: "08:15",
+                arrivalTime: "14:45",
+                status: .pending,
+                stops: 0,
+                stopCity: nil,
+                gate: nil,
+                terminal: nil,
+                aircraftType: "Boeing 777-300ER",
+                duration: "14h 30m",
+                legs: [],
+                departureDelayMinutes: 0,
+                arrivalDelayMinutes: 0,
+                progressPercent: 0,
+                cruisingSpeed: nil,
+                cruisingAltitude: nil,
+                baggageClaim: nil,
+                originCode: "DXB",
+                originCity: "Dubai",
+                destinationCode: "JFK",
+                destinationCity: "New York"
+            ),
+
+            // 6 — Aterrizado, con baggage claim
+            FlightStatusViewData(
+                id: "UA900-2026-04-15",
+                flightNumber: "UA 900",
+                operatingFlightNumber: nil,
+                route: "San Francisco → Tokyo",
+                departureTime: "11:00",
+                arrivalTime: "15:30",
+                status: .landed,
+                stops: 0,
+                stopCity: nil,
+                gate: "G98",
+                terminal: "I",
+                aircraftType: "Boeing 787-9",
+                duration: "11h 30m",
+                legs: [],
+                departureDelayMinutes: 8,
+                arrivalDelayMinutes: 3,
+                progressPercent: 100,
+                cruisingSpeed: "907 km/h",
+                cruisingAltitude: "12496 m",
+                baggageClaim: "5",
+                originCode: "SFO",
+                originCity: "San Francisco",
+                destinationCode: "NRT",
+                destinationCity: "Tokyo"
             )
         ]
     }
@@ -313,6 +387,7 @@ enum FlightStatus: Equatable, CaseIterable {
     case cancelled
     case boarding
     case departed
+    case landed
     case pending
 
     var color: Color {
@@ -322,6 +397,7 @@ enum FlightStatus: Equatable, CaseIterable {
         case .cancelled: .red
         case .boarding: .blue
         case .departed: .gray
+        case .landed: .green
         case .pending: .yellow
         }
     }
@@ -333,6 +409,7 @@ enum FlightStatus: Equatable, CaseIterable {
         case .cancelled: "flight.status.cancelled"
         case .boarding: "flight.status.boarding"
         case .departed: "flight.status.departed"
+        case .landed: "flight.status.landed"
         case .pending: "flight.status.pending"
         }
     }

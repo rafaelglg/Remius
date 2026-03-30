@@ -11,19 +11,49 @@ protocol FlightStatusAssembler {
     static func resolve() -> FlightStatusView
 }
 
-struct FlightStatusAssemblerImpl {
-    static func makeFlightStatusApiService() -> APIService {
-        let amadeusConfig: AmadeusConfig = AmadeusConfig()
+struct FlightStatusAssemblerImpl: FlightStatusAssembler {
+    private static let activeProvider: FlightProvider = .flightAware
 
-        return APIServiceImpl(
-            session: .shared,
-            tokenManager: TokenManager(),
-            config: amadeusConfig
-        )
+    // MARK: - Provider
+
+    private enum FlightProvider {
+        case amadeus
+        case flightAware
     }
 
-    static func makeFlightStatusInteractor() -> FlightStatusInteractor {
-        FlightStatusInteractorImpl(apiService: makeFlightStatusApiService())
+    private static func makeAPIService() -> APIService {
+        switch activeProvider {
+        case .flightAware:
+            return FlightAwareAPIService(
+                session: .shared,
+                config: FlightAwareConfig.production
+            )
+        case .amadeus:
+            return AmadeusAPIService(
+                session: .shared,
+                tokenManager: TokenManager(),
+                config: AmadeusConfig.production
+            )
+        }
+    }
+
+    private static func makeFlightRouteGrouper() -> FlightRouteGrouper {
+        FlightRouteGrouper()
+    }
+
+    // MARK: - Interactor
+    private static func makeFlightStatusInteractor() -> FlightStatusInteractor {
+        switch activeProvider {
+        case .flightAware:
+            return FlightAwareInteractor(
+                repository: FlightAwareRepositoryImpl(apiService: makeAPIService(),
+                                                      grouper: makeFlightRouteGrouper())
+            )
+        case .amadeus:
+            return AmadeusInteractor(
+                repository: AmadeusRepositoryImpl(apiService: makeAPIService())
+            )
+        }
     }
 
     static func makeFlightStatusRouter() -> FlightStatusRouter {
@@ -33,7 +63,8 @@ struct FlightStatusAssemblerImpl {
     static func makeFlightSearchPresenter() -> FlightStatusPresenter {
         FlightStatusPresenterImpl(
             interactor: makeFlightStatusInteractor(),
-            router: makeFlightStatusRouter()
+            router: makeFlightStatusRouter(),
+            mapper: FlightStatusMapper()
         )
     }
 
@@ -46,7 +77,8 @@ final class FlightStatusAssemblerMock: FlightStatusAssembler {
     static func makeFlightSearchPresenter() -> FlightStatusPresenter {
         FlightStatusPresenterImpl(
             interactor: FlightStatusInteractorMock(),
-            router: FlightStatusRouterImpl()
+            router: FlightStatusRouterImpl(),
+            mapper: FlightStatusMapper()
         )
     }
 

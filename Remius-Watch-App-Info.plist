@@ -4,6 +4,8 @@
 <dict>
 	<key>AmadeusClientSecret</key>
 	<string>$(AMADEUS_CLIENT_SECRET)</string>
+	<key>FlightAwareAPIKey</key>
+	<string>$(FLIGHT_AWARE_APIKEY)</string>
 	<key>AmadeusClientID</key>
 	<string>$(AMADEUS_CLIENT_ID)</string>
 </dict>

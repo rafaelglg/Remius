@@ -6,21 +6,35 @@
 //
 
 protocol FlightStatusInteractor: Sendable {
-    func fetchFlightStatus(for flightNumber: String, date: String) async throws -> [DatedFlight]
+    func fetchFlightStatus(for flightNumber: String, date: String) async throws -> FlightStatusDomainData
 }
 
-struct FlightStatusInteractorMock: FlightStatusInteractor {
-    func fetchFlightStatus(for _: String, date _: String) async throws -> [DatedFlight] {
-        DatedFlight.mocks
+// MARK: - FlightAware
+
+struct FlightAwareInteractor: FlightStatusInteractor {
+    let repository: FlightAwareRepository
+
+    func fetchFlightStatus(for flightNumber: String, date: String) async throws -> FlightStatusDomainData {
+        let groups = try await repository.fetchFlights(for: flightNumber, date: date)
+        return .flightAware(groups)
     }
 }
 
-struct FlightStatusInteractorImpl: FlightStatusInteractor {
-    let apiService: APIService
+// MARK: - Amadeus
 
-    func fetchFlightStatus(for flightNumber: String, date: String) async throws -> [DatedFlight] {
-        let flight: FlightResponse = try await apiService.fetch(endpoint: .flightStatus(flightNumber: flightNumber, date: date))
+struct AmadeusInteractor: FlightStatusInteractor {
+    let repository: AmadeusRepository
 
-        return flight.data
+    func fetchFlightStatus(for flightNumber: String, date: String) async throws -> FlightStatusDomainData {
+        let flights = try await repository.fetchFlights(for: flightNumber, date: date)
+        return .amadeus(flights)
+    }
+}
+
+// MARK: - Mock
+
+struct FlightStatusInteractorMock: FlightStatusInteractor {
+    func fetchFlightStatus(for flightNumber: String, date: String) async throws -> FlightStatusDomainData {
+        .amadeus(DatedFlight.mocks)
     }
 }

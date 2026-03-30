@@ -29,12 +29,27 @@ struct FlightPoint: Codable {
 }
 
 struct DepartureArrival: Codable {
+    let terminal: Terminal?
+    let gate: Gate?
     let timings: [Timing]
 }
 
+struct Terminal: Codable {
+    let code: String
+}
+
+struct Gate: Codable {
+    let mainGate: String
+}
+
 struct Timing: Codable {
-    let qualifier: String
-    let value: String
+    let qualifier: String      // STD, STA, ETD, ETA, ATD, ATA
+    let value: String          // ISO 8601
+    let delays: [Delay]?
+}
+
+struct Delay: Codable {
+    let duration: String       // "PT25M"
 }
 
 struct FlightSegment: Codable {
@@ -56,5 +71,5 @@ struct FlightLeg: Codable {
 }
 
 struct AircraftEquipment: Codable {
-    let aircraftType: String // Ej: "777"
+    let aircraftType: String
 }

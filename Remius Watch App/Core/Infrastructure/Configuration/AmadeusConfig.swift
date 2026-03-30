@@ -12,22 +12,13 @@ protocol APIConfigurable {
     var clientSecret: String { get }
 }
 
-struct AmadeusConfig: APIConfigurable {
+struct AmadeusConfig: APIConfigurable, EnvironmentConfigurable {
     let clientId: String
     let clientSecret: String
 
-    init() {
-        guard let clientId = Bundle.main.infoDictionary?["AmadeusClientID"] as? String, !clientId.isEmpty else {
-            fatalError("AmadeusClientId not found in Info.plist")
-        }
-
-        guard let clientSecret = Bundle.main.infoDictionary?["AmadeusClientSecret"] as? String,
-              !clientSecret.isEmpty else {
-            fatalError("AmadeusClientSecret not configured in Info.plist")
-        }
-
-        self.clientId = clientId
-        self.clientSecret = clientSecret
+    init() throws {
+        self.clientId = try Self.value(forKey: "AmadeusClientID")
+        self.clientSecret = try Self.value(forKey: "AmadeusClientSecret")
     }
 
     init(clientId: String, clientSecret: String) {
@@ -39,5 +30,5 @@ struct AmadeusConfig: APIConfigurable {
 // MARK: - Static Configurations
 
 extension AmadeusConfig {
-    static let production = AmadeusConfig()
+    static let production = try! AmadeusConfig() // swiftlint:disable:this force_try
 }

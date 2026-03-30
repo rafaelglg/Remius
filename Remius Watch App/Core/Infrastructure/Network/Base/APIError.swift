@@ -10,26 +10,29 @@ import Foundation
 enum APIError: Error {
     case invalidURL
     case itemNotFound
-
     case decodingError
     case unauthorized
     case networkError(Error)
     case serverError(statusCode: Int)
+    case configurationMissing(key: String)
 
-    var localizedDescription: String {
+    /// Technical description for logs and analytics. Never show to the user.
+    var technicalDescription: String {
         switch self {
         case .invalidURL:
-            return "Invalid URL"
+            return "Invalid URL construction"
         case .itemNotFound:
-            return "The requested information could not be found."
+            return "Resource not found (404)"
         case .decodingError:
-            return "Failed to decode response"
+            return "JSON decoding failed"
         case .unauthorized:
-            return "Unauthorized - Invalid token"
+            return "Authentication failed (401)"
         case let .networkError(error):
             return "Network error: \(error.localizedDescription)"
         case let .serverError(statusCode):
-            return "Server error: \(statusCode)"
+            return "Server error: HTTP \(statusCode)"
+        case let .configurationMissing(key):
+            return "Missing config key: \(key)"
         }
     }
 }

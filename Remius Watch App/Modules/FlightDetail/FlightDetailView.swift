@@ -7,49 +7,73 @@
 
 import SwiftUI
 
-private extension Double {
-    static let mediumHighOpacity: CGFloat = 0.8
-}
-// TODO: Refactor this when migrating API
 struct FlightDetailView: View {
     let flight: FlightStatusViewData
     @ScaledMetric private var iconWidth: CGFloat = 24
+    @AppStorage("showAviationDetails") private var showAviationDetails = false
+
+    private enum Layout {
+        static let cardCornerRadius: CGFloat = 8
+        static let cardBackgroundOpacity: CGFloat = 0.1
+        static let statusTintOpacity: CGFloat = 0.8
+        static let stopsBadgeOpacity: CGFloat = 0.2
+    }
 
     var body: some View {
         ScrollView {
             VStack(spacing: .medium) {
-                flightHeader
-
-                if flight.hasCodeshare {
-                    codeshareInfo
-                }
-
-                statusBadge
+                headerSection
                 routeSection
-
-                Divider()
-                    .padding(.vertical, .xxSmall)
-
-                flightDurationSection
-
-                if !flight.isDirectFlight {
-                    Divider()
-                        .padding(.vertical, .xxSmall)
-
-                    flightLegsSection
-                }
-
-                Divider()
-                    .padding(.vertical, .xxSmall)
-
-                if flight.aircraftType != nil || flight.gate != nil {
-                    additionalInfoSection
-                }
+                flightInfoSection
+                additionalInfoSection
+                aviationToggleSection
             }
             .padding(.xxSmall)
         }
         .navigationTitle(flight.flightNumber)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    // MARK: - Header
+
+    @ViewBuilder
+    private var headerSection: some View {
+        flightHeader
+
+        if flight.hasCodeshare {
+            codeshareInfo
+        }
+
+        statusBadge
+    }
+
+    // MARK: - Flight Info
+
+    @ViewBuilder
+    private var flightInfoSection: some View {
+        sectionDivider
+        flightDurationSection
+
+        if flight.hasDelays {
+            sectionDivider
+            delaySection
+        }
+
+        if flight.isInProgress {
+            sectionDivider
+            flightProgressSection
+        }
+
+        if !flight.isDirectFlight {
+            sectionDivider
+            flightLegsSection
+        }
+
+        sectionDivider
+    }
+
+    private var sectionDivider: some View {
+        Divider().padding(.vertical, .xxSmall)
     }
 
     // MARK: - Flight Header
@@ -69,11 +93,11 @@ struct FlightDetailView: View {
                     Text(verbatim: "•")
                         .foregroundStyle(.tertiary)
 
-                    Text(flight.stopsCount)
+                    Text(flight.stopsCountLocalized)
                         .font(.caption)
                         .foregroundStyle(.orange)
                         .padding(.xxSmall)
-                        .background(.orange.opacity(0.2), in: .capsule)
+                        .background(.orange.opacity(Layout.stopsBadgeOpacity), in: .capsule)
                 }
             }
         }
@@ -100,7 +124,7 @@ struct FlightDetailView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.small)
-        .background(.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
+        .background(.blue.opacity(Layout.cardBackgroundOpacity), in: RoundedRectangle(cornerRadius: Layout.cardCornerRadius))
     }
 
     // MARK: - Status Badge
@@ -118,7 +142,7 @@ struct FlightDetailView: View {
         .padding(.horizontal, .small)
         .padding(.vertical, .xxSmall)
         .glassEffect(
-            .regular.tint(flight.status.color.opacity(.mediumHighOpacity)).interactive(),
+            .regular.tint(flight.status.color.opacity(Layout.statusTintOpacity)).interactive(),
             in: .capsule
         )
     }
@@ -127,45 +151,8 @@ struct FlightDetailView: View {
 
     private var routeSection: some View {
         VStack(spacing: .xSmall) {
-            FlightRouteTimelineView(
-                departureTime: flight.departureTime,
-                arrivalTime: flight.arrivalTime
-            )
-            .padding(.top, .sizeTiny)
-
-            // Date and timezone info
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(flight.departureDate)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                    Text(flight.departureTimezone)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-
-                Spacer()
-
-                if flight.arrivesNextDay {
-                    Text("flight.detail.nextDay")
-                        .font(.caption2)
-                        .foregroundStyle(.orange)
-                        .padding(.horizontal, .xxSmall)
-                        .padding(.vertical, 2)
-                        .background(.orange.opacity(0.2), in: Capsule())
-                }
-
-                Spacer()
-
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(flight.arrivalDate)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                    Text(flight.arrivalTimezone)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-            }
+            FlightRouteTimelineView(route: flight.routeInfo)
+                .padding(.top, .sizeTiny)
         }
     }
 
@@ -177,6 +164,65 @@ struct FlightDetailView: View {
             label: "flight.detail.duration",
             value: flight.duration
         )
+    }
+
+    // MARK: - Delay Section
+
+    private var delaySection: some View {
+        VStack(alignment: .leading, spacing: .xxSmall) {
+            Text("flight.detail.delayTitle")
+                .font(.caption)
+                .fontWeight(.semibold)
+
+            if let departureDelay = flight.delayText {
+                detailRow(
+                    icon: "clock.badge.exclamationmark",
+                    label: "flight.detail.departureDelay",
+                    value: departureDelay
+                )
+            }
+
+            if let arrivalDelay = flight.arrivalDelayText {
+                detailRow(
+                    icon: "clock.badge.exclamationmark",
+                    label: "flight.detail.arrivalDelay",
+                    value: arrivalDelay
+                )
+            }
+
+            Text("flight.detail.delayFootnote")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+        }
+        .foregroundStyle(flight.isEarly ? .green : .orange)
+    }
+
+    // MARK: - Flight Progress Section
+
+    private var flightProgressSection: some View {
+        VStack(alignment: .leading, spacing: .xSmall) {
+            HStack {
+                Image(systemName: "airplane")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+
+                Text("flight.detail.inFlight")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                Text("\(flight.progressPercent)%")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .monospacedDigit()
+            }
+
+            ProgressView(value: flight.progressValue)
+                .tint(.blue)
+        }
+        .padding(.small)
+        .background(.blue.opacity(Layout.cardBackgroundOpacity), in: RoundedRectangle(cornerRadius: Layout.cardCornerRadius))
     }
 
     // MARK: - Flight Legs Section
@@ -237,11 +283,12 @@ struct FlightDetailView: View {
         .padding(.vertical, .xxSmall)
     }
 
-    // MARK: - Additional Info Section
+    // MARK: - Aviation Details (Configurable)
 
-    private var additionalInfoSection: some View {
-        VStack(alignment: .leading, spacing: .xxSmall) {
-            if flight.isDirectFlight, let aircraftType = flight.aircraftType {
+    @ViewBuilder
+    private var aviationSection: some View {
+        VStack(alignment: .leading, spacing: .xSmall) {
+            if let aircraftType = flight.aircraftType {
                 detailRow(
                     icon: "airplane",
                     label: "flight.detail.aircraft",
@@ -249,12 +296,56 @@ struct FlightDetailView: View {
                 )
             }
 
-            if let gate = flight.gate {
+            if let speed = flight.cruisingSpeed {
+                detailRow(
+                    icon: "gauge.with.needle",
+                    label: "flight.detail.speed",
+                    value: speed
+                )
+            }
+
+            if let altitude = flight.cruisingAltitude {
+                detailRow(
+                    icon: "arrow.up.to.line",
+                    label: "flight.detail.altitude",
+                    value: altitude
+                )
+            }
+        }
+    }
+
+    // MARK: - Additional Info Section
+
+    private var additionalInfoSection: some View {
+        VStack(alignment: .leading, spacing: .xxSmall) {
+            if let gateInfo = flight.gateInfo {
                 detailRow(
                     icon: "door.left.hand.open",
                     label: "flight.detail.gate",
-                    value: gate
+                    value: gateInfo
                 )
+            }
+
+            if let baggageClaim = flight.baggageClaim {
+                detailRow(
+                    icon: "suitcase",
+                    label: "flight.detail.baggageClaim",
+                    value: String(localized: "flight.detail.carousel \(baggageClaim)")
+                )
+            }
+        }
+    }
+
+    // MARK: - Aviation Toggle
+
+    private var aviationToggleSection: some View {
+        VStack(spacing: .small) {
+            sectionDivider
+            Toggle("flight.detail.aviationToggle", isOn: $showAviationDetails)
+                .font(.caption2)
+
+            if showAviationDetails {
+                aviationSection
             }
         }
     }
@@ -279,38 +370,49 @@ struct FlightDetailView: View {
                 .fontWeight(.medium)
         }
     }
+
 }
 
-// MARK: - Preview
+// MARK: - Previews
 
-#Preview("Direct Flight") {
+#Preview("On Time") {
     NavigationStack {
         FlightDetailView(flight: .mocks[0])
     }
 }
 
-#Preview("Flight with Stop") {
-    NavigationStack {
-        FlightDetailView(flight: .mocks[2])
-    }
-}
-
-// MARK: - Preview
-
-#Preview("On Time Flight") {
-    NavigationStack {
-        FlightDetailView(flight: .mocks[0])
-    }
-}
-
-#Preview("Delayed Flight") {
+#Preview("Delayed") {
     NavigationStack {
         FlightDetailView(flight: .mocks[1])
     }
 }
 
-#Preview("Boarding Flight") {
+#Preview("Stop + Codeshare") {
     NavigationStack {
         FlightDetailView(flight: .mocks[2])
+    }
+}
+
+#Preview("In Progress") {
+    NavigationStack {
+        FlightDetailView(flight: .mocks[3])
+    }
+}
+
+#Preview("Cancelled") {
+    NavigationStack {
+        FlightDetailView(flight: .mocks[4])
+    }
+}
+
+#Preview("Pending") {
+    NavigationStack {
+        FlightDetailView(flight: .mocks[5])
+    }
+}
+
+#Preview("Landed + Baggage") {
+    NavigationStack {
+        FlightDetailView(flight: .mocks[6])
     }
 }

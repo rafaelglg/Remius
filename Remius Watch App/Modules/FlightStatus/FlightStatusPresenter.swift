@@ -65,8 +65,9 @@ final class FlightStatusPresenterMock: FlightStatusPresenter {
 @Observable
 @MainActor
 final class FlightStatusPresenterImpl: FlightStatusPresenter {
-    let interactor: FlightStatusInteractor
-    let router: FlightStatusRouter
+    private let interactor: FlightStatusInteractor
+    private let router: FlightStatusRouter
+    private let mapper: FlightStatusMapperProtocol
 
     private(set) var loadState: LoadState<[FlightStatusViewData]> = .initial
     var presentAddFlightSheet: Bool = false
@@ -80,17 +81,26 @@ final class FlightStatusPresenterImpl: FlightStatusPresenter {
         }
     }
 
-    init(interactor: FlightStatusInteractor,
-         router: FlightStatusRouter) {
+    init(
+        interactor: FlightStatusInteractor,
+        router: FlightStatusRouter,
+        mapper: FlightStatusMapperProtocol
+    ) {
         self.interactor = interactor
         self.router = router
+        self.mapper = mapper
     }
 
     func searchFlights() async {
+        loadState = .loading
+
         do {
-            let flightStatus: [DatedFlight] = try await interactor.fetchFlightStatus(for: "AF1259", date: "2026-02-07")
-            let viewDataList = flightStatus.map { $0.toViewData() }
-            loadState = .success(viewDataList)
+            let flights = try await interactor.fetchFlightStatus(
+                for: "AF1259",
+                date: "2026-02-17"
+            )
+            let viewData = mapper.map(flights)
+            loadState = .success(viewData)
         } catch {
             let uiError = FlightErrorMapper.map(error: error)
             loadState = .failure(uiError)

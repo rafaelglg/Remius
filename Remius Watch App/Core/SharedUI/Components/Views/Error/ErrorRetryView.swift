@@ -11,6 +11,7 @@ import SwiftUI
 struct ErrorRetryView: View {
     var systemName: String = "exclamationmark.triangle.fill"
     var title: String = "flight.error.generic.title"
+    var subtitle: String?
 
     let onRetry: @Sendable () async -> Void
 
@@ -23,7 +24,7 @@ struct ErrorRetryView: View {
 
             VStack(spacing: .xxSmall) {
                 titleSection
-                retrySection
+                subtitleSection
             }
         }
     }
@@ -59,11 +60,14 @@ struct ErrorRetryView: View {
             .minimumScaleFactor(0.7)
     }
 
-    var retrySection: some View {
-        Text(isRetrying ? "flight.error.loading" : "flight.error.tapToRetry")
-            .font(.caption2)
-            .foregroundStyle(.secondary)
-            .contentTransition(.numericText(value: isRetrying ? 1 : 0))
+    @ViewBuilder
+    var subtitleSection: some View {
+        if let subtitle {
+            Text(LocalizedStringResource(stringLiteral: subtitle))
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
     }
 
     func onTapAnimation() {
