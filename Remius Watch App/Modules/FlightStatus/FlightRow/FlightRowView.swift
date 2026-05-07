@@ -12,29 +12,41 @@ struct FlightRowView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: .xxSmall) {
-            HStack {
-                Text(flight.flightNumber)
-                    .font(.headline)
-
-                Spacer()
-
-                HStack(spacing: .xxSmall) {
-                    Circle()
-                        .fill(flight.status.color)
-                        .frame(size: 6)
-
-                    Text(flight.statusText)
-                        .font(.caption2)
-                        .foregroundStyle(flight.status.color)
-                }
-            }
-
-            Text("\(flight.departureTime) → \(flight.arrivalTime)")
-                .font(.caption2)
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
+            header
+            routeSection
         }
-        .padding(.vertical, .xxSmall)
+        .padding(.vertical, .xSmall)
+    }
+
+    private var header: some View {
+        HStack {
+            flightNumber
+            Spacer()
+            flightStatus
+        }
+    }
+
+    private var flightNumber: some View {
+        Text(flight.flightNumber)
+            .font(.subheadline)
+    }
+
+    private var flightStatus: some View {
+        HStack(spacing: .xxSmall) {
+            Circle()
+                .fill(flight.status.color)
+                .frame(size: 6)
+
+            Text(flight.statusText)
+                .font(.caption2)
+                .foregroundStyle(flight.status.color)
+        }
+    }
+
+    private var routeSection: some View {
+        Text(flight.routeCodes)
+            .font(.caption2)
+            .foregroundStyle(.tertiary)
     }
 }
 

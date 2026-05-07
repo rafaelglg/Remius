@@ -9,122 +9,145 @@ import SwiftUI
 
 struct FlightDetailView: View {
     let flight: FlightStatusViewData
-    @ScaledMetric private var iconWidth: CGFloat = 24
-    @AppStorage("showAviationDetails") private var showAviationDetails = false
+    @Environment(SubscriptionRepositoryImpl.self) private var subscriptionRepository
+    @ScaledMetric private var iconWidth: CGFloat = .sizeXSmall
+    @State private var selectedPage: Page = .route
+
+    private enum Page: Hashable {
+        case route, duration, progress, legs, airport, aviation
+    }
 
     private enum Layout {
         static let cardCornerRadius: CGFloat = 8
         static let cardBackgroundOpacity: CGFloat = 0.1
         static let statusTintOpacity: CGFloat = 0.8
-        static let stopsBadgeOpacity: CGFloat = 0.2
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: .medium) {
-                headerSection
-                routeSection
-                flightInfoSection
-                additionalInfoSection
-                aviationToggleSection
-            }
-            .padding(.xxSmall)
+        TabView(selection: $selectedPage) {
+            routeTab
+            durationTab
+            if flight.isInProgress { progressTab }
+            if flight.hasAirportInfo { airportTab }
+            if !flight.isDirectFlight { legsTab }
+            if flight.hasAviationInfo { aviationTab }
         }
+        .tabViewStyle(.verticalPage)
         .navigationTitle(flight.flightNumber)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarVisibility(selectedPage == .route ? .visible : .hidden, for: .navigationBar)
     }
 
-    // MARK: - Header
+    // MARK: - Route Page
 
-    @ViewBuilder
-    private var headerSection: some View {
-        flightHeader
-
-        if flight.hasCodeshare {
-            codeshareInfo
+    private var routePage: some View {
+        ScrollView {
+            VStack(spacing: .small) {
+                statusBadge
+                FlightRouteTimelineView(route: flight.routeInfo)
+            }
+            .scenePadding(.horizontal)
         }
-
-        statusBadge
+        .contentMargins(.top, .medium)
     }
 
-    // MARK: - Flight Info
+    // MARK: - Duration Page
 
-    @ViewBuilder
-    private var flightInfoSection: some View {
-        sectionDivider
-        flightDurationSection
+    private var durationPage: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: .small) {
+                detailRow(
+                    icon: "clock",
+                    label: "flight.detail.duration",
+                    value: flight.duration
+                )
 
-        if flight.hasDelays {
-            sectionDivider
-            delaySection
+                if flight.hasDelays {
+                    sectionDivider
+                    delaySection
+                }
+            }
+            .scenePadding(.horizontal)
         }
+        .scrollBounceBehavior(.basedOnSize)
+    }
 
-        if flight.isInProgress {
-            sectionDivider
-            flightProgressSection
+    // MARK: - Progress Page
+
+    private var progressPage: some View {
+        VStack(alignment: .leading, spacing: .xSmall) {
+            HStack {
+                Image(systemName: "airplane")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+
+                Text("flight.detail.inFlight")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                Text(verbatim: "\(flight.progressPercent)%")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .monospacedDigit()
+            }
+
+            ProgressView(value: flight.progressValue)
+                .tint(.blue)
         }
+        .padding(.small)
+        .background(
+            .blue.opacity(Layout.cardBackgroundOpacity),
+            in: RoundedRectangle(cornerRadius: Layout.cardCornerRadius)
+        )
+        .scenePadding(.horizontal)
+    }
 
-        if !flight.isDirectFlight {
-            sectionDivider
-            flightLegsSection
+    // MARK: - Legs Page
+
+    private var legsPage: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: .xSmall) {
+                Text("flight.detail.flightRoute")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                ForEach(flight.legs) { leg in
+                    legRow(leg: leg, isLast: leg.id == flight.legs.last?.id)
+                }
+            }
+            .scenePadding(.horizontal)
         }
+    }
 
-        sectionDivider
+    // MARK: - Airport Page
+
+    private var airportPage: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: .small) {
+                if let gateInfo = flight.gateInfo {
+                    detailRow(
+                        icon: "door.left.hand.open",
+                        label: "flight.detail.gate",
+                        value: gateInfo
+                    )
+                }
+
+                if let baggageClaim = flight.baggageClaim {
+                    detailRow(
+                        icon: "suitcase",
+                        label: "flight.detail.baggageClaim",
+                        value: String(localized: "flight.detail.carousel \(baggageClaim)")
+                    )
+                }
+            }
+            .scenePadding(.horizontal)
+        }
     }
 
     private var sectionDivider: some View {
         Divider().padding(.vertical, .xxSmall)
-    }
-
-    // MARK: - Flight Header
-
-    private var flightHeader: some View {
-        VStack(spacing: .xxSmall) {
-            Text(flight.flightNumber)
-                .font(.title2)
-                .fontWeight(.bold)
-
-            HStack(spacing: .xxSmall) {
-                Text(flight.route)
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-
-                if !flight.isDirectFlight {
-                    Text(verbatim: "•")
-                        .foregroundStyle(.tertiary)
-
-                    Text(flight.stopsCountLocalized)
-                        .font(.caption)
-                        .foregroundStyle(.orange)
-                        .padding(.xxSmall)
-                        .background(.orange.opacity(Layout.stopsBadgeOpacity), in: .capsule)
-                }
-            }
-        }
-    }
-
-    // MARK: - Codeshare Info
-
-    private var codeshareInfo: some View {
-        VStack(alignment: .leading, spacing: .xxSmall) {
-            HStack(spacing: .xxSmall) {
-                Image(systemName: "airplane.circle.fill")
-                    .font(.caption2)
-                    .foregroundStyle(.blue)
-
-                Text("flight.detail.operatedBy")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-
-            Text(flight.operatingFlightNumber ?? "")
-                .font(.callout)
-                .fontWeight(.semibold)
-                .foregroundStyle(.blue)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.small)
-        .background(.blue.opacity(Layout.cardBackgroundOpacity), in: RoundedRectangle(cornerRadius: Layout.cardCornerRadius))
     }
 
     // MARK: - Status Badge
@@ -144,25 +167,6 @@ struct FlightDetailView: View {
         .glassEffect(
             .regular.tint(flight.status.color.opacity(Layout.statusTintOpacity)).interactive(),
             in: .capsule
-        )
-    }
-
-    // MARK: - Route Section
-
-    private var routeSection: some View {
-        VStack(spacing: .xSmall) {
-            FlightRouteTimelineView(route: flight.routeInfo)
-                .padding(.top, .sizeTiny)
-        }
-    }
-
-    // MARK: - Flight Duration Section
-
-    private var flightDurationSection: some View {
-        detailRow(
-            icon: "clock",
-            label: "flight.detail.duration",
-            value: flight.duration
         )
     }
 
@@ -197,58 +201,13 @@ struct FlightDetailView: View {
         .foregroundStyle(flight.isEarly ? .green : .orange)
     }
 
-    // MARK: - Flight Progress Section
-
-    private var flightProgressSection: some View {
-        VStack(alignment: .leading, spacing: .xSmall) {
-            HStack {
-                Image(systemName: "airplane")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-
-                Text("flight.detail.inFlight")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Spacer()
-
-                Text("\(flight.progressPercent)%")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .monospacedDigit()
-            }
-
-            ProgressView(value: flight.progressValue)
-                .tint(.blue)
-        }
-        .padding(.small)
-        .background(.blue.opacity(Layout.cardBackgroundOpacity), in: RoundedRectangle(cornerRadius: Layout.cardCornerRadius))
-    }
-
-    // MARK: - Flight Legs Section
-
-    private var flightLegsSection: some View {
-        VStack(alignment: .leading, spacing: .xSmall) {
-            Text("flight.detail.flightRoute")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            ForEach(Array(flight.legs.enumerated()), id: \.element.id) { index, leg in
-                legRow(leg: leg, isLast: index == flight.legs.count - 1)
-            }
-        }
-    }
+    // MARK: - Leg Row
 
     private func legRow(leg: FlightLegViewData, isLast: Bool) -> some View {
-        VStack(alignment: .leading, spacing: .xxSmall) {
+        VStack(alignment: .leading, spacing: .xSmall) {
             HStack(spacing: .xxSmall) {
-                Image(systemName: "airplane")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .frame(width: iconWidth)
-
                 Text(verbatim: "\(leg.origin) → \(leg.destination)")
-                    .font(.caption)
+                    .font(.caption2)
                     .fontWeight(.medium)
 
                 Spacer()
@@ -260,22 +219,23 @@ struct FlightDetailView: View {
             }
 
             if let aircraft = leg.aircraftType {
-                HStack(spacing: .xxSmall) {
-                    Color.clear.frame(width: iconWidth)
+                Label {
                     Text(aircraft)
-                        .font(.caption2)
                         .foregroundStyle(.tertiary)
+                } icon: {
+                    Image(systemName: "airplane")
+                        .foregroundStyle(.secondary)
                 }
+                .font(.caption2)
             }
 
             if !isLast {
-                HStack(spacing: .xxSmall) {
-                    Image(systemName: "clock.badge.exclamationmark")
-                        .font(.caption2)
-                        .frame(width: iconWidth)
+                Label {
                     Text("flight.detail.stopIn \(leg.destination)")
-                        .font(.caption2)
+                } icon: {
+                    Image(systemName: "clock.badge.exclamationmark")
                 }
+                .font(.caption2)
                 .foregroundStyle(.orange)
                 .padding(.top, .xxSmall)
             }
@@ -283,94 +243,99 @@ struct FlightDetailView: View {
         .padding(.vertical, .xxSmall)
     }
 
-    // MARK: - Aviation Details (Configurable)
+    // MARK: - Aviation Section
 
     @ViewBuilder
-    private var aviationSection: some View {
-        VStack(alignment: .leading, spacing: .xSmall) {
-            if let aircraftType = flight.aircraftType {
-                detailRow(
-                    icon: "airplane",
-                    label: "flight.detail.aircraft",
-                    value: aircraftType
-                )
-            }
+    private var aviationPage: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: .xSmall) {
+                if let speed = flight.cruisingSpeed {
+                    detailRow(
+                        icon: "gauge.with.needle",
+                        label: "flight.detail.speed",
+                        value: speed
+                    )
+                }
 
-            if let speed = flight.cruisingSpeed {
-                detailRow(
-                    icon: "gauge.with.needle",
-                    label: "flight.detail.speed",
-                    value: speed
-                )
+                if let altitude = flight.cruisingAltitude {
+                    detailRow(
+                        icon: "arrow.up.to.line",
+                        label: "flight.detail.altitude",
+                        value: altitude
+                    )
+                }
             }
-
-            if let altitude = flight.cruisingAltitude {
-                detailRow(
-                    icon: "arrow.up.to.line",
-                    label: "flight.detail.altitude",
-                    value: altitude
-                )
-            }
+            .scenePadding(.horizontal)
         }
     }
 
-    // MARK: - Additional Info Section
-
-    private var additionalInfoSection: some View {
-        VStack(alignment: .leading, spacing: .xxSmall) {
-            if let gateInfo = flight.gateInfo {
-                detailRow(
-                    icon: "door.left.hand.open",
-                    label: "flight.detail.gate",
-                    value: gateInfo
-                )
-            }
-
-            if let baggageClaim = flight.baggageClaim {
-                detailRow(
-                    icon: "suitcase",
-                    label: "flight.detail.baggageClaim",
-                    value: String(localized: "flight.detail.carousel \(baggageClaim)")
-                )
-            }
-        }
-    }
-
-    // MARK: - Aviation Toggle
-
-    private var aviationToggleSection: some View {
-        VStack(spacing: .small) {
-            sectionDivider
-            Toggle("flight.detail.aviationToggle", isOn: $showAviationDetails)
-                .font(.caption2)
-
-            if showAviationDetails {
-                aviationSection
-            }
-        }
-    }
-
-    // MARK: - Detail Row Component
+    // MARK: - Detail Row
 
     private func detailRow(
         icon: String,
         label: LocalizedStringKey,
         value: String
     ) -> some View {
-        HStack(spacing: .xxSmall) {
+        HStack {
             Label(label, systemImage: icon)
-                .font(.caption2)
                 .foregroundStyle(.secondary)
                 .labelReservedIconWidth(iconWidth)
 
             Spacer()
 
             Text(value)
-                .font(.caption)
                 .fontWeight(.medium)
         }
+        .font(.caption2)
+    }
+}
+
+// MARK: - Tabs
+
+private extension FlightDetailView {
+
+    var routeTab: some View {
+        routePage
+            .tag(Page.route)
+            .containerBackground(flight.status.color.opacity(0.4).gradient, for: .tabView)
     }
 
+    var durationTab: some View {
+        durationPage
+            .tag(Page.duration)
+            .containerBackground(.indigo.opacity(0.3).gradient, for: .tabView)
+    }
+
+    var progressTab: some View {
+        progressPage
+            .tag(Page.progress)
+            .containerBackground(.blue.opacity(0.3).gradient, for: .tabView)
+    }
+
+    var airportTab: some View {
+        airportPage
+            .tag(Page.airport)
+            .containerBackground(.teal.opacity(0.3).gradient, for: .tabView)
+    }
+
+    var legsTab: some View {
+        legsPage
+            .tag(Page.legs)
+            .containerBackground(.orange.opacity(0.3).gradient, for: .tabView)
+    }
+
+    @ViewBuilder
+    var aviationTab: some View {
+        if subscriptionRepository.isSubscribed {
+            aviationPage
+                .tag(Page.aviation)
+                .containerBackground(.orange.opacity(0.3).gradient, for: .tabView)
+        } else {
+            SubscriptionView()
+                .tag(Page.aviation)
+                .containerBackground(.purple.opacity(0.3).gradient, for: .tabView)
+        }
+    }
 }
 
 // MARK: - Previews
@@ -379,40 +344,47 @@ struct FlightDetailView: View {
     NavigationStack {
         FlightDetailView(flight: .mocks[0])
     }
+    .environment(SubscriptionRepositoryImpl())
 }
 
 #Preview("Delayed") {
     NavigationStack {
         FlightDetailView(flight: .mocks[1])
     }
+    .environment(SubscriptionRepositoryImpl())
 }
 
-#Preview("Stop + Codeshare") {
+#Preview("Departed") {
     NavigationStack {
         FlightDetailView(flight: .mocks[2])
     }
-}
-
-#Preview("In Progress") {
-    NavigationStack {
-        FlightDetailView(flight: .mocks[3])
-    }
+    .environment(SubscriptionRepositoryImpl())
 }
 
 #Preview("Cancelled") {
     NavigationStack {
-        FlightDetailView(flight: .mocks[4])
+        FlightDetailView(flight: .mocks[3])
     }
+    .environment(SubscriptionRepositoryImpl())
 }
 
 #Preview("Pending") {
     NavigationStack {
-        FlightDetailView(flight: .mocks[5])
+        FlightDetailView(flight: .mocks[4])
     }
+    .environment(SubscriptionRepositoryImpl())
 }
 
 #Preview("Landed + Baggage") {
     NavigationStack {
+        FlightDetailView(flight: .mocks[5])
+    }
+    .environment(SubscriptionRepositoryImpl())
+}
+
+#Preview("with stops") {
+    NavigationStack {
         FlightDetailView(flight: .mocks[6])
     }
+    .environment(SubscriptionRepositoryImpl())
 }

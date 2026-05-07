@@ -22,16 +22,14 @@ struct FlightAwareMapper: FlightAwareMapperProtocol {
         return FlightStatusViewData(
             id: makeId(from: departureFlight),
             flightNumber: departureFlight.identIata ?? "",
-            operatingFlightNumber: nil,
             route: makeRoute(departure: departureFlight, arrival: arrivalFlight),
             departureTime: extractTime(from: departureFlight.scheduledOut),
             arrivalTime: extractTime(from: arrivalFlight.scheduledIn),
             status: mapStatus(from: departureFlight),
-            stops: max(0, group.segments.count - 1),
-            stopCity: group.stops.first,
+            stopCities: group.stops,
             gate: departureFlight.gateOrigin,
             terminal: departureFlight.terminalOrigin,
-            aircraftType: mapAircraftName(departureFlight.aircraftType),
+            aircraftType: departureFlight.aircraftType,
             duration: formatDuration(seconds: departureFlight.filedEte ?? 0),
             legs: mapLegs(group.segments),
             departureDelayMinutes: (departureFlight.departureDelay ?? 0) / 60,
@@ -98,11 +96,11 @@ private extension FlightAwareMapper {
     func mapLegs(_ segments: [FlightAwareFlightData]) -> [FlightLegViewData] {
         segments.enumerated().map { index, segment in
             FlightLegViewData(
-                id: "\(segment.origin.codeIata ?? "?")-\(segment.destination.codeIata ?? "?")-\(index)",
+                id: index,
                 origin: segment.origin.codeIata ?? "???",
                 destination: segment.destination.codeIata ?? "???",
                 duration: formatDuration(seconds: segment.filedEte ?? 0),
-                aircraftType: mapAircraftName(segment.aircraftType)
+                aircraftType: segment.aircraftType
             )
         }
     }
@@ -111,11 +109,6 @@ private extension FlightAwareMapper {
 // MARK: - Formatters
 
 private extension FlightAwareMapper {
-
-    func mapAircraftName(_ code: String?) -> String? {
-        guard let code else { return nil }
-        return AircraftType(iataCode: code).displayName
-    }
 
     func extractTime(from isoString: String?) -> String {
         guard let isoString, let tIndex = isoString.firstIndex(of: "T") else { return "--:--" }

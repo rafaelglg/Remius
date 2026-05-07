@@ -5,7 +5,7 @@
 //  Created by Rafael Loggiodice on 19/2/26.
 //
 
-protocol FlightStatusMapperProtocol {
+protocol FlightStatusMapperProtocol: Sendable {
     func map(_ domainData: FlightStatusDomainData) -> [FlightStatusViewData]
 }
 

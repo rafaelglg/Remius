@@ -9,6 +9,7 @@ import SwiftUI
 
 struct FlightStatusView: View {
     @State var presenter: FlightStatusPresenter
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationStack {
@@ -18,11 +19,21 @@ struct FlightStatusView: View {
                     presenter.navigateToFlightDetails(for: flight)
                 }
                 .sheet(isPresented: $presenter.presentAddFlightSheet) {
-                    Text("hola")
+                    presenter.navigateToAddFlight { flight in
+                        Task { await presenter.addFlight(flight) }
+                    }
                 }
-                .toolbar { addFlightToolbarButton }
+                .toolbar {
+                    addFlightToolbarButton
+                    reloadFlightsToolbarButton
+                }
         }
-        .task(presenter.searchFlights)
+        .task(presenter.loadFlights)
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                Task { await presenter.refreshFlights() }
+            }
+        }
     }
 
     @ViewBuilder
@@ -50,7 +61,7 @@ struct FlightStatusView: View {
     }
 
     private var noFlightsView: some View {
-        NoFlightsView()
+        presenter.navigateTonNoFlightView()
     }
 
     private func flightsList(_ flights: [FlightStatusViewData]) -> some View {
@@ -60,26 +71,8 @@ struct FlightStatusView: View {
                     FlightRowView(flight: flight)
                 }
             }
+            .onDelete(perform: presenter.deleteFlight)
         }
-    }
-
-    @ToolbarContentBuilder
-    private var addFlightToolbarButton: some ToolbarContent {
-        if case .success = presenter.loadState {
-            ToolbarItem(placement: .bottomBar) {
-                addFlightButton
-            }
-        }
-    }
-
-    private var addFlightButton: some View {
-        HStack {
-            Spacer()
-            Button(action: presenter.onAddFlightAction) {
-                Label(FlightStatusViewData.addFlightLabel, systemImage: "plus.circle.fill")
-            }
-        }
-        .shadow(radius: 5, y: 3)
     }
 
     @ViewBuilder
@@ -88,13 +81,50 @@ struct FlightStatusView: View {
             if let uiError = error as? UIError {
                 ErrorRetryView(
                     title: uiError.title,
-                    subtitle: uiError.subtitle
-                ) {
-                    await presenter.searchFlights()
-                }
+                    subtitle: uiError.subtitle,
+                    onRetry: presenter.loadFlights)
             }
         }
         .scrollBounceBehavior(.basedOnSize)
+    }
+}
+
+// MARK: Toolbar Buttons
+private extension FlightStatusView {
+    @ToolbarContentBuilder
+    var addFlightToolbarButton: some ToolbarContent {
+        if case .success = presenter.loadState {
+            ToolbarItem(placement: .bottomBar) {
+                addFlightButton
+            }
+        }
+    }
+
+    @ToolbarContentBuilder
+    var reloadFlightsToolbarButton: some ToolbarContent {
+        if presenter.hasFlights {
+            ToolbarItem(placement: .topBarLeading) {
+                reloadButton
+            }
+        }
+    }
+
+    var reloadButton: some View {
+         Button {
+             Task { await presenter.refreshFlights() }
+         } label: {
+             Label(FlightStatusViewData.reloadLabel, systemImage: "arrow.clockwise")
+         }
+     }
+
+    var addFlightButton: some View {
+        HStack {
+            Spacer()
+            Button(action: presenter.onAddFlightAction) {
+                Label(FlightStatusViewData.addFlightLabel, systemImage: "plus.circle.fill")
+            }
+        }
+        .shadow(radius: 5, y: 3)
     }
 }
 

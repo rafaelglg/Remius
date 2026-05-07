@@ -56,11 +56,6 @@ struct FlightSegment: Codable {
     let boardPointIataCode: String
     let offPointIataCode: String
     let scheduledSegmentDuration: String
-    let partnership: Partnership?
-}
-
-struct Partnership: Codable {
-    let operatingFlight: FlightDesignator?
 }
 
 struct FlightLeg: Codable {

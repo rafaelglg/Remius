@@ -6,8 +6,6 @@
 //
 
 import Foundation
-import SwiftUI
-import OSLog
 
 struct UIError: Error {
     let title: String
@@ -20,10 +18,7 @@ struct UIError: Error {
 }
 
 struct FlightErrorMapper {
-    private static let logger = Logger(subsystem: "com.remius.app", category: "FlightError")
-
     static func map(error: Error) -> UIError {
-        // Log technical error for analytics/debugging
         logTechnicalError(error)
 
         // Map to user-friendly message
@@ -94,9 +89,9 @@ struct FlightErrorMapper {
 
     private static func logTechnicalError(_ error: Error) {
         if let apiError = error as? APIError {
-            logger.error("API Error: \(apiError.technicalDescription)")
+            Log.error("API Error: \(apiError.technicalDescription)", category: .flight)
         } else {
-            logger.error("Error: \(error.localizedDescription)")
+            Log.error("Error: \(error.localizedDescription)", category: .flight)
         }
     }
 }

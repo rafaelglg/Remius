@@ -27,16 +27,10 @@ struct AmadeusMapper: AmadeusMapperProtocol {
         let depTime = extractTime(from: departureTimeValue)
         let arrTime = extractTime(from: arrivalTimeValue)
 
-        let numberOfStops = max(0, flight.legs.count - 1)
-        let stopCity = numberOfStops > 0 ? flight.legs.first?.offPointIataCode : nil
-
-        let operatingFlight = flight.segments.first?.partnership?.operatingFlight
-        let operatingFlightNumber = operatingFlight.map {
-            "\($0.carrierCode) \($0.flightNumber)"
-        }
+        let stopCities = flight.legs.dropLast().map(\.offPointIataCode)
 
         let legsData = mapLegs(flight.legs)
-        let aircraftType = mapAircraftType(flight.legs.first?.aircraftEquipment?.aircraftType)
+        let aircraftType = flight.legs.first?.aircraftEquipment?.aircraftType
         let duration = formatDuration(flight.segments.first?.scheduledSegmentDuration ?? "")
         let status = determineStatus(from: flight.flightPoints.first?.departure)
 
@@ -49,13 +43,11 @@ struct AmadeusMapper: AmadeusMapperProtocol {
         return FlightStatusViewData(
             id: "\(flight.flightDesignator.carrierCode)\(flight.flightDesignator.flightNumber)-\(flight.scheduledDepartureDate)",
             flightNumber: "\(flight.flightDesignator.carrierCode) \(flight.flightDesignator.flightNumber)",
-            operatingFlightNumber: operatingFlightNumber,
             route: "\(origin) → \(destination)",
             departureTime: depTime,
             arrivalTime: arrTime,
             status: status,
-            stops: numberOfStops,
-            stopCity: stopCity,
+            stopCities: stopCities,
             gate: gate,
             terminal: terminal,
             aircraftType: aircraftType,
@@ -78,20 +70,14 @@ struct AmadeusMapper: AmadeusMapperProtocol {
 
     private func mapLegs(_ legs: [FlightLeg]) -> [FlightLegViewData] {
         legs.enumerated().map { index, leg in
-            let aircraft = mapAircraftType(leg.aircraftEquipment?.aircraftType)
             return FlightLegViewData(
-                id: "\(leg.boardPointIataCode)-\(leg.offPointIataCode)-\(index)",
+                id: index,
                 origin: leg.boardPointIataCode,
                 destination: leg.offPointIataCode,
                 duration: formatDuration(leg.scheduledLegDuration),
-                aircraftType: aircraft
+                aircraftType: leg.aircraftEquipment?.aircraftType
             )
         }
-    }
-
-    private func mapAircraftType(_ code: String?) -> String? {
-        guard let code else { return nil }
-        return AircraftType(iataCode: code).displayName
     }
 
     private func determineStatus(from departure: DepartureArrival?) -> FlightStatus {

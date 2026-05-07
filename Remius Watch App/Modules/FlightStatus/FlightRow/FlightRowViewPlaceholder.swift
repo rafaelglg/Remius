@@ -21,15 +21,15 @@ struct FlightRowViewPlaceholder: View {
             .fill(Color.gray.opacity(0.3))
             .frame(width: 60, height: 15)
             .shimmerEffect()
-            .clipShape(.rect(cornerRadius: 5))
+            .clipShape(.rect(cornerRadius: 4))
     }
 
     var bodySection: some View {
         Rectangle()
             .fill(Color.gray.opacity(0.3))
-            .frame(width: 70, height: 15)
+            .frame(width: 80, height: 15)
             .shimmerEffect()
-            .clipShape(.rect(cornerRadius: 5))
+            .clipShape(.rect(cornerRadius: 4))
     }
 }
 

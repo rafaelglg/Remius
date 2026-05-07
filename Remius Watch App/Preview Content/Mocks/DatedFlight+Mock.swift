@@ -5,6 +5,8 @@
 //  Created by rafael.loggiodice on 6/1/26.
 //
 
+#if DEBUG
+
 extension DatedFlight {
     static var mock: DatedFlight {
         mocks[0]
@@ -56,7 +58,6 @@ extension DatedFlight {
                         boardPointIataCode: "MAD",
                         offPointIataCode: "JFK",
                         scheduledSegmentDuration: "PT8H",
-                        partnership: nil
                     )
                 ],
                 legs: [
@@ -120,12 +121,6 @@ extension DatedFlight {
                         boardPointIataCode: "RBA",
                         offPointIataCode: "CDG",
                         scheduledSegmentDuration: "PT2H",
-                        partnership: Partnership(
-                            operatingFlight: FlightDesignator(
-                                carrierCode: "KL",
-                                flightNumber: 2193
-                            )
-                        )
                     )
                 ],
                 legs: [
@@ -182,12 +177,6 @@ extension DatedFlight {
                         boardPointIataCode: "LAX",
                         offPointIataCode: "MIA",
                         scheduledSegmentDuration: "PT5H20M",
-                        partnership: Partnership(
-                            operatingFlight: FlightDesignator(
-                                carrierCode: "BA",
-                                flightNumber: 4567
-                            )
-                        )
                     )
                 ],
                 legs: [
@@ -208,3 +197,5 @@ extension DatedFlight {
         ]
     }
 }
+
+#endif

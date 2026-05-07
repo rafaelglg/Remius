@@ -17,7 +17,7 @@ struct PressableButtonStyle: ButtonStyle {
 }
 
 enum ButtonStyleOption {
-    case plain, press, any
+    case plain, press, any, glass
 }
 
 extension View {
@@ -31,7 +31,16 @@ extension View {
             pressableButton(progress: progress, action: action)
         case .any:
             anyButton(action: action)
+        case .glass:
+            glassButton(action: action)
         }
+    }
+
+    private func glassButton(action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            self
+        }
+        .buttonStyle(.glass)
     }
 
     func anyButton(action: @escaping () -> Void) -> some View {

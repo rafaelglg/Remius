@@ -30,11 +30,3 @@ struct AmadeusInteractor: FlightStatusInteractor {
         return .amadeus(flights)
     }
 }
-
-// MARK: - Mock
-
-struct FlightStatusInteractorMock: FlightStatusInteractor {
-    func fetchFlightStatus(for flightNumber: String, date: String) async throws -> FlightStatusDomainData {
-        .amadeus(DatedFlight.mocks)
-    }
-}

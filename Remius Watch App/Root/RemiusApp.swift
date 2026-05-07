@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct RemiusWatchApp: App {
+    @State private var subscriptionRepository = SubscriptionRepositoryImpl()
+
     var body: some Scene {
         WindowGroup {
-            FlightStatusAssemblerImpl.resolve()
+            FlightStatusAssemblerMock.resolve()
+                .environment(subscriptionRepository)
         }
     }
 }

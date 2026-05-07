@@ -27,6 +27,9 @@ struct FlightRouteTimelineView: View {
         VStack(alignment: .leading, spacing: .zero) {
             departureRow
             departureDetails
+
+            stopRows
+
             Spacer().frame(height: .medium)
             arrivalDetails
             arrivalRow
@@ -42,13 +45,19 @@ struct FlightRouteTimelineView: View {
         .padding(.vertical, .xxSmall)
     }
 
+    // MARK: - Waypoint Circle
+
+    private func waypointCircle(_ color: Color) -> some View {
+        Circle()
+            .fill(color)
+            .frame(width: Style.circleSize, height: Style.circleSize)
+    }
+
     // MARK: - Departure
 
     private var departureRow: some View {
         HStack(alignment: .center, spacing: .xSmall) {
-            Circle()
-                .fill(.green)
-                .frame(width: Style.circleSize, height: Style.circleSize)
+            waypointCircle(.green)
 
             Text(route.departureTime)
                 .font(.title3)
@@ -72,6 +81,30 @@ struct FlightRouteTimelineView: View {
         .padding(.leading, Style.detailsLeading)
     }
 
+    // MARK: - Stop
+
+    private var stopRows: some View {
+        ForEach(route.stops) { stop in
+            Spacer().frame(height: .medium)
+            VStack(alignment: .leading, spacing: .xxSmall) {
+                HStack(alignment: .center, spacing: .xSmall) {
+                    waypointCircle(.orange)
+
+                    Text(stop.code)
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                }
+
+                if let city = stop.city {
+                    Text(city)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .padding(.leading, Style.detailsLeading)
+                }
+            }
+        }
+    }
+
     // MARK: - Arrival
 
     private var arrivalDetails: some View {
@@ -92,9 +125,7 @@ struct FlightRouteTimelineView: View {
 
     private var arrivalRow: some View {
         HStack(alignment: .center, spacing: .xSmall) {
-            Circle()
-                .fill(.blue)
-                .frame(width: Style.circleSize, height: Style.circleSize)
+            waypointCircle(.blue)
 
             Text(route.destinationCode)
                 .font(.caption2)
@@ -113,10 +144,48 @@ struct FlightRouteTimelineView: View {
             originCity: "Madrid",
             originCode: "MAD",
             destinationCity: "Bristol",
-            destinationCode: "BRS"
+            destinationCode: "BRS",
+            stops: []
         )
     )
     .padding()
+}
+
+#Preview("1 Stop") {
+    ScrollView {
+        FlightRouteTimelineView(
+            route: RouteInfo(
+                departureTime: "21:45",
+                arrivalTime: "14:45",
+                originCity: "London",
+                originCode: "LHR",
+                destinationCity: "Buenos Aires",
+                destinationCode: "EZE",
+                stops: [
+                    StopInfo(id: 1, code: "GIG", city: "Rio de Janeiro")
+                ]
+            )
+        )
+    }
+}
+
+#Preview("2 Stops") {
+    ScrollView {
+        FlightRouteTimelineView(
+            route: RouteInfo(
+                departureTime: "08:00",
+                arrivalTime: "22:30",
+                originCity: "London",
+                originCode: "LHR",
+                destinationCity: "Lima",
+                destinationCode: "LIM",
+                stops: [
+                    StopInfo(id: 2, code: "GIG", city: "Rio de Janeiro"),
+                    StopInfo(id: 3, code: "EZE", city: "Buenos Aires")
+                ]
+            )
+        )
+    }
 }
 
 // MARK: - Timeline Appearance

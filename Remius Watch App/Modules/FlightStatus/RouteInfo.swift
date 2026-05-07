@@ -12,4 +12,11 @@ struct RouteInfo: Hashable {
     let originCode: String
     let destinationCity: String?
     let destinationCode: String
+    let stops: [StopInfo]
+}
+
+struct StopInfo: Hashable, Identifiable {
+    let id: Int
+    let code: String
+    let city: String?
 }

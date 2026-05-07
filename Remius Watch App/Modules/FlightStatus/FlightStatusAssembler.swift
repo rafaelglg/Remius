@@ -57,7 +57,7 @@ struct FlightStatusAssemblerImpl: FlightStatusAssembler {
     }
 
     static func makeFlightStatusRouter() -> FlightStatusRouter {
-        FlightStatusRouterImpl()
+        FlightStatusRouterImpl(addFlightFactory: AddFlightAssembler())
     }
 
     static func makeFlightSearchPresenter() -> FlightStatusPresenter {
@@ -70,21 +70,5 @@ struct FlightStatusAssemblerImpl: FlightStatusAssembler {
 
     static func resolve() -> FlightStatusView {
         FlightStatusView(presenter: makeFlightSearchPresenter())
-    }
-}
-
-final class FlightStatusAssemblerMock: FlightStatusAssembler {
-    static func makeFlightSearchPresenter() -> FlightStatusPresenter {
-        FlightStatusPresenterImpl(
-            interactor: FlightStatusInteractorMock(),
-            router: FlightStatusRouterImpl(),
-            mapper: FlightStatusMapper()
-        )
-    }
-
-    static func resolve() -> FlightStatusView {
-        FlightStatusView(
-            presenter: FlightStatusPresenterMock()
-        )
     }
 }

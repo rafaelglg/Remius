@@ -25,7 +25,6 @@ struct FlightAwareFlightData: Codable {
     let operatorIcao: String?
     let registration: String?
     let inboundFaFlightId: String?
-    let codesharesIata: [String]
 
     // MARK: Status
     let status: String
